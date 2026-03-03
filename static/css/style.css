@@ -1,0 +1,273 @@
+/* --- Reset & Base --- */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    cursor: none;
+    user-select: none;
+}
+
+/* --- Screen management --- */
+.screen {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2em;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* --- Idle screen --- */
+#screen-idle h1 {
+    font-size: 4em;
+    font-weight: 900;
+    margin-bottom: 0.1em;
+    color: #e94560;
+}
+
+.subtitle {
+    font-size: 1.5em;
+    color: #aaa;
+    margin-bottom: 1.5em;
+}
+
+.category-select {
+    margin-bottom: 1.5em;
+}
+
+.category-select h2 {
+    font-size: 1.4em;
+    margin-bottom: 0.7em;
+    color: #ccc;
+}
+
+#category-buttons {
+    display: flex;
+    gap: 0.7em;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 0.7em;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.6em 1.5em;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 0.4em;
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.1s;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn-category {
+    background: #16213e;
+    color: #eee;
+    border: 2px solid #0f3460;
+}
+
+.btn-category:hover {
+    background: #0f3460;
+}
+
+.btn-start {
+    background: #e94560;
+    color: #fff;
+}
+
+.btn-start:hover {
+    background: #c73a52;
+}
+
+.btn-restart {
+    background: #e94560;
+    color: #fff;
+    font-size: 1.4em;
+    margin-top: 1em;
+}
+
+.hint {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 1.5em;
+}
+
+/* --- Question header --- */
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px;
+    font-size: 1.2em;
+    color: #aaa;
+    margin-bottom: 1em;
+}
+
+/* --- Question text --- */
+.question-text {
+    font-size: 2.5em;
+    font-weight: 700;
+    text-align: center;
+    max-width: 900px;
+    line-height: 1.3;
+    margin-bottom: 1em;
+}
+
+/* --- Timer bar (voting) --- */
+.timer-bar-container {
+    width: 80%;
+    max-width: 700px;
+    height: 20px;
+    background: #16213e;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5em;
+}
+
+.timer-bar {
+    height: 100%;
+    background: #e94560;
+    border-radius: 10px;
+    transition: width 0.9s linear;
+}
+
+.timer-label {
+    font-size: 1.3em;
+    color: #aaa;
+    margin-bottom: 1em;
+}
+
+/* --- Vote status --- */
+.vote-status {
+    display: flex;
+    gap: 4em;
+    margin-top: 1em;
+}
+
+.player-vote {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3em;
+}
+
+.player-name {
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.vote-indicator {
+    font-size: 2.5em;
+}
+
+.vote-indicator.voted {
+    color: #4ecca3;
+}
+
+.vote-indicator.ja {
+    color: #4ecca3;
+}
+
+.vote-indicator.nein {
+    color: #e94560;
+}
+
+/* --- Debate screen --- */
+.debate-label {
+    font-size: 3em;
+    font-weight: 900;
+    color: #e94560;
+    margin-bottom: 0.3em;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.debate-timer {
+    font-size: 8em;
+    font-weight: 900;
+    color: #e94560;
+    margin: 0.2em 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.debate-timer.urgent {
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.debate-hint {
+    font-size: 1.3em;
+    color: #aaa;
+    margin-bottom: 1em;
+}
+
+/* --- Game Over --- */
+.game-over-label {
+    font-size: 4em;
+    font-weight: 900;
+    color: #e94560;
+}
+
+.game-over-message {
+    font-size: 1.5em;
+    color: #aaa;
+    margin: 0.5em 0;
+}
+
+/* --- Score screen --- */
+.score-screen-label {
+    font-size: 4em;
+    font-weight: 900;
+    color: #4ecca3;
+}
+
+.final-score {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin: 0.5em 0;
+}
+
+.score-message {
+    font-size: 1.3em;
+    color: #aaa;
+}
+
+/* --- Evaluating flash --- */
+.screen.flash-agree {
+    animation: flash-green 0.6s ease-out;
+}
+
+.screen.flash-disagree {
+    animation: flash-red 0.6s ease-out;
+}
+
+@keyframes flash-green {
+    0% { background: #4ecca3; }
+    100% { background: #1a1a2e; }
+}
+
+@keyframes flash-red {
+    0% { background: #e94560; }
+    100% { background: #1a1a2e; }
+}

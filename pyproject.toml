@@ -1,0 +1,18 @@
+[project]
+name = "einig-oder-aus"
+version = "0.1.0"
+description = "Einig oder Aus! — Die Demokratiemaschine"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0",
+    "flask-socketio>=5.3",
+    "simple-websocket>=1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einig oder Aus!</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- IDLE SCREEN -->
+<div id="screen-idle" class="screen active">
+    <h1>Einig oder Aus!</h1>
+    <p class="subtitle">Die Demokratiemaschine</p>
+    <div class="category-select">
+        <h2>Kategorie wählen</h2>
+        <div id="category-buttons"></div>
+        <button class="btn btn-start" onclick="startGame(null)">Alle Kategorien</button>
+    </div>
+    <p class="hint">Spieler 1: Tasten 1 (Ja) / 2 (Nein) &mdash; Spieler 2: Tasten 9 (Ja) / 0 (Nein)</p>
+</div>
+
+<!-- VOTING SCREEN -->
+<div id="screen-voting" class="screen">
+    <div class="question-header">
+        <span id="question-number">Frage 1/10</span>
+        <span id="score-display">Punkte: 0</span>
+    </div>
+    <div class="question-text" id="question-text"></div>
+    <div class="timer-bar-container">
+        <div class="timer-bar" id="timer-bar"></div>
+    </div>
+    <div class="timer-label" id="timer-label"></div>
+    <div class="vote-status">
+        <div class="player-vote" id="p1-vote">
+            <span class="player-name">Spieler 1</span>
+            <span class="vote-indicator" id="p1-indicator">⏳</span>
+        </div>
+        <div class="player-vote" id="p2-vote">
+            <span class="player-name">Spieler 2</span>
+            <span class="vote-indicator" id="p2-indicator">⏳</span>
+        </div>
+    </div>
+</div>
+
+<!-- DEBATE SCREEN -->
+<div id="screen-debate" class="screen">
+    <div class="question-header">
+        <span id="debate-question-number">Frage 1/10</span>
+        <span id="debate-score-display">Punkte: 0</span>
+    </div>
+    <div class="debate-label">DEBATTE!</div>
+    <div class="question-text" id="debate-question-text"></div>
+    <div class="debate-timer" id="debate-timer">120</div>
+    <div class="debate-hint">Diskutiert und stimmt erneut ab!</div>
+    <div class="vote-status">
+        <div class="player-vote" id="debate-p1-vote">
+            <span class="player-name">Spieler 1</span>
+            <span class="vote-indicator" id="debate-p1-indicator">⏳</span>
+        </div>
+        <div class="player-vote" id="debate-p2-vote">
+            <span class="player-name">Spieler 2</span>
+            <span class="vote-indicator" id="debate-p2-indicator">⏳</span>
+        </div>
+    </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="screen-game_over" class="screen">
+    <div class="game-over-label">GAME OVER</div>
+    <div class="game-over-message">Keine Einigung erzielt!</div>
+    <div class="final-score">Punkte: <span id="gameover-score">0</span></div>
+    <button class="btn btn-restart" onclick="restartGame()">Neues Spiel</button>
+</div>
+
+<!-- SCORE SCREEN -->
+<div id="screen-score_screen" class="screen">
+    <div class="score-screen-label">Geschafft!</div>
+    <div class="final-score">Punkte: <span id="final-score">0</span></div>
+    <div class="score-message" id="score-message"></div>
+    <button class="btn btn-restart" onclick="restartGame()">Neues Spiel</button>
+</div>
+
+<script src="/static/js/socket.io.min.js"></script>
+<script src="/static/js/audio.js"></script>
+<script src="/static/js/input.js"></script>
+<script src="/static/js/game.js"></script>
+</body>
+</html>
