@@ -4,6 +4,7 @@
  */
 const AnimationScenes = {
     _basePath: '/static/img/cutouts/',
+    _lastThumb: 'woman',
 
     _img(sub) {
         return this._basePath + sub;
@@ -155,7 +156,8 @@ const AnimationScenes = {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        const thumbFile = Math.random() < 0.5 ? 'objects/thumbs-up-man.png' : 'objects/thumbs-up-woman.png';
+        this._lastThumb = this._lastThumb === 'man' ? 'woman' : 'man';
+        const thumbFile = 'objects/thumbs-up-' + this._lastThumb + '.png';
         const thumb = CutoutAnimator.spawn(this._img(thumbFile), {
             width: 280, x: vw / 2 - 140, y: vh / 2 + 20, opacity: 0,
         });
