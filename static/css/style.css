@@ -23,14 +23,10 @@
     opacity: 1;
 }
 
-#countdown-text {
-    font-family: 'VictorianParlor', serif;
-    font-size: 20vw;
-    color: #f5e6c8;
-    text-shadow:
-        4px 4px 0 #2a1a0a,
-        -2px -2px 0 #2a1a0a,
-        0 0 30px rgba(218, 165, 32, 0.6);
+#countdown-overlay img {
+    max-width: 70vw;
+    max-height: 80vh;
+    will-change: transform, opacity;
 }
 
 /* --- Reset & Base --- */

@@ -26,6 +26,10 @@ const AnimationScenes = {
             this._img('decorative/curtain-left.png'),
             this._img('decorative/curtain-right.png'),
             this._img('decorative/foot.png'),
+            this._img('decorative/countdown-3.png'),
+            this._img('decorative/countdown-2.png'),
+            this._img('decorative/countdown-1.png'),
+            this._img('decorative/countdown-go.png'),
         ]);
     },
 
@@ -71,33 +75,49 @@ const AnimationScenes = {
         CutoutAnimator.slideOut(curtainR, 'right', 0.5);
     },
 
-    /** Countdown before game starts — 3, 2, 1, LOS! */
+    /** Countdown before game starts — 3, 2, 1, LOS! with cutout images */
     countdown(onComplete) {
         const overlay = document.getElementById('countdown-overlay');
-        const textEl = document.getElementById('countdown-text');
-        const steps = ['3', '2', '1', 'LOS!'];
+        const imgFiles = [
+            'decorative/countdown-3.png',
+            'decorative/countdown-2.png',
+            'decorative/countdown-1.png',
+            'decorative/countdown-go.png',
+        ];
         let i = 0;
+        const self = this;
 
+        // Clear any text content
+        overlay.innerHTML = '';
         overlay.classList.add('active');
+        gsap.set(overlay, { opacity: 1 });
 
         function showNext() {
-            if (i >= steps.length) {
-                // Fade out and done
+            if (i >= imgFiles.length) {
                 gsap.to(overlay, { opacity: 0, duration: 0.3, onComplete: () => {
                     overlay.classList.remove('active');
+                    overlay.innerHTML = '';
                     if (onComplete) onComplete();
                 }});
                 return;
             }
 
-            textEl.textContent = steps[i];
+            // Remove previous image
+            overlay.innerHTML = '';
+
+            const img = document.createElement('img');
+            img.src = self._img(imgFiles[i]);
+            img.style.maxWidth = '70vw';
+            img.style.maxHeight = '80vh';
+            overlay.appendChild(img);
+
             // Pop-in effect
-            gsap.fromTo(textEl,
-                { scale: 2.5, opacity: 0 },
-                { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2)' }
+            gsap.fromTo(img,
+                { scale: 3, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(2)' }
             );
             // Fade out before next
-            gsap.to(textEl, { opacity: 0, scale: 0.5, duration: 0.2, delay: 0.7 });
+            gsap.to(img, { opacity: 0, scale: 0.3, duration: 0.25, delay: 0.65 });
 
             i++;
             setTimeout(showNext, 1000);
