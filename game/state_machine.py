@@ -184,7 +184,10 @@ class GameStateMachine:
         self._cancel_timer()
         self.session.timer_remaining = seconds
         self._countdown_target = on_expire
-        self._tick()
+        # Wait one second before first tick (so timer shows full value first)
+        self._timer = threading.Timer(self._tick_interval, self._tick)
+        self._timer.daemon = True
+        self._timer.start()
 
     def _tick(self):
         """Decrement timer and schedule next tick or fire expiry."""

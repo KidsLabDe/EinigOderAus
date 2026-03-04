@@ -2,6 +2,7 @@ const socket = io();
 
 let previousPhase = null;
 let categoriesLoaded = false;
+let debateUrgentTriggered = false;
 
 // --- Load categories on startup ---
 function loadCategories() {
@@ -23,7 +24,11 @@ function loadCategories() {
 }
 
 function startGame(category) {
-    socket.emit('start_game', { category: category });
+    // Show countdown, then start
+    AnimationScenes.gameStart();
+    AnimationScenes.countdown(() => {
+        socket.emit('start_game', { category: category });
+    });
 }
 
 function restartGame() {
@@ -57,8 +62,30 @@ socket.on('game_state', (state) => {
     const phase = state.phase;
     const showVotes = state.players.every(p => p.has_voted);
 
-    // Phase transition sounds
+    // Phase transition sounds + animations
     if (previousPhase !== phase) {
+        debateUrgentTriggered = false;
+
+        if (phase === 'idle') {
+            AnimationScenes.idle();
+        } else if (phase === 'voting' && previousPhase === 'idle') {
+            AnimationScenes.gameStart();
+            setTimeout(() => AnimationScenes.votingEnter(), 600);
+        } else if (phase === 'voting' && (previousPhase === 'debate' || previousPhase === 'voting')) {
+            AnimationScenes.agreement();
+        } else if (phase === 'debate') {
+            AnimationScenes.disagreement();
+        } else if (phase === 'game_over') {
+            AnimationScenes.gameOver();
+        } else if (phase === 'score_screen') {
+            AnimationScenes.scoreScreen(state.score, state.total_questions);
+        }
+
+        // Voting enter for subsequent questions (not first)
+        if (phase === 'voting' && previousPhase === 'voting') {
+            setTimeout(() => AnimationScenes.votingEnter(), 800);
+        }
+
         if (phase === 'debate') {
             AudioManager.buzzer();
         } else if (phase === 'game_over') {
@@ -124,6 +151,11 @@ socket.on('game_state', (state) => {
         timerEl.textContent = state.timer_remaining;
         timerEl.classList.toggle('urgent', state.timer_remaining <= 10);
 
+        if (state.timer_remaining <= 10 && !debateUrgentTriggered) {
+            debateUrgentTriggered = true;
+            AnimationScenes.debateUrgent();
+        }
+
         const p1 = state.players[0];
         const p2 = state.players[1];
         const ind1 = document.getElementById('debate-p1-indicator');
@@ -154,3 +186,7 @@ socket.on('game_state', (state) => {
 
 // Load categories on first connect
 loadCategories();
+
+// Initialize animation engine
+CutoutAnimator.init();
+AnimationScenes.preload();

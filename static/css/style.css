@@ -1,3 +1,38 @@
+/* --- Victorian Font --- */
+@font-face {
+    font-family: 'VictorianParlor';
+    src: url('/static/fonts/Victorian Parlor Vintage Alternate_free.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* --- Countdown Overlay --- */
+#countdown-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+}
+
+#countdown-overlay.active {
+    opacity: 1;
+}
+
+#countdown-text {
+    font-family: 'VictorianParlor', serif;
+    font-size: 20vw;
+    color: #f5e6c8;
+    text-shadow:
+        4px 4px 0 #2a1a0a,
+        -2px -2px 0 #2a1a0a,
+        0 0 30px rgba(218, 165, 32, 0.6);
+}
+
 /* --- Reset & Base --- */
 *, *::before, *::after {
     margin: 0;
@@ -251,6 +286,21 @@ html, body {
 .score-message {
     font-size: 1.3em;
     color: #aaa;
+}
+
+/* --- Animation overlay --- */
+#animation-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+}
+
+#animation-layer img {
+    position: absolute;
+    will-change: transform, opacity;
 }
 
 /* --- Evaluating flash --- */
