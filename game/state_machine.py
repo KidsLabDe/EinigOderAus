@@ -91,6 +91,7 @@ class GameStateMachine:
         return {
             "phase": session.phase.value,
             "score": session.score,
+            "agreements": session.agreements,
             "question": question_text,
             "question_number": question_number,
             "total_questions": total_questions,
@@ -155,6 +156,7 @@ class GameStateMachine:
 
     def _on_agreement(self):
         """Votes match — score points. 10 for voting, 100 for debate consensus."""
+        self.session.agreements += 1
         if self.session.phase == GamePhase.DEBATE:
             self.session.score += 100
         else:

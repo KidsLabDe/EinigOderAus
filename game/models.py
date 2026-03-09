@@ -44,6 +44,7 @@ class GameSession:
     mode: GameMode = GameMode.TWO_PLAYERS
     phase: GamePhase = GamePhase.IDLE
     score: int = 0
+    agreements: int = 0
     current_question_index: int = 0
     questions: list[Question] = field(default_factory=list)
     players: list[Player] = field(default_factory=lambda: [

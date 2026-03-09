@@ -225,6 +225,24 @@ html, body {
     color: #eee;
 }
 
+.category-option.nav-option {
+    background: #0f3460;
+    border-color: #4ecca3;
+}
+
+.category-option.nav-option .category-key {
+    background: #4ecca3;
+    color: #1a1a2e;
+}
+
+.page-indicator {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 1em;
+    color: #666;
+    margin-top: 0.3em;
+}
+
 /* --- Start / Restart prompt --- */
 .start-prompt, .restart-hint {
     font-size: 1.5em;

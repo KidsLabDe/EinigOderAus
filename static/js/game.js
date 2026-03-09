@@ -7,8 +7,11 @@ let tickStarted = false;
 
 // Key order for category mapping: P1-Ja, P1-Nein, P2-Ja, P2-Nein
 let keyOrder = ['1', '2', '8', '9'];
-// Map: key -> category (null = alle)
+// Map: key -> action ({type:'category', value:...} or {type:'nav', value:'next'/'back'})
 let keyCategoryMap = {};
+let allCategories = [];
+let categoryPage = 0;
+const CATS_PER_PAGE = 3;
 
 // Load key config
 fetch('/api/config')
@@ -19,47 +22,75 @@ fetch('/api/config')
     })
     .catch(() => {});
 
-// --- Load categories and build key mapping ---
+// --- Load categories and build paginated key mapping ---
 function loadCategories() {
     fetch('/api/categories')
         .then(r => r.json())
         .then(categories => {
-            buildCategoryGrid(categories);
+            allCategories = categories;
+            categoryPage = 0;
+            buildCategoryPage();
             categoriesLoaded = true;
         });
 }
 
-function buildCategoryGrid(categories) {
+function buildCategoryPage() {
     const grid = document.getElementById('category-grid');
     grid.innerHTML = '';
     keyCategoryMap = {};
 
     const slots = keyOrder.slice(0, 4);
+    const totalPages = Math.ceil(allCategories.length / CATS_PER_PAGE);
+    const isLastPage = categoryPage >= totalPages - 1;
+    const startIdx = categoryPage * CATS_PER_PAGE;
+    const pageCats = allCategories.slice(startIdx, startIdx + CATS_PER_PAGE);
+
     const items = [];
 
-    const maxCats = Math.min(categories.length, slots.length - 1);
-    for (let i = 0; i < maxCats; i++) {
-        items.push({ key: slots[i], label: capitalize(categories[i]), category: categories[i] });
-        keyCategoryMap[slots[i]] = categories[i];
-    }
-    const alleSlot = slots[maxCats];
-    items.push({ key: alleSlot, label: 'Alle Kategorien', category: null });
-    keyCategoryMap[alleSlot] = null;
-
-    for (let i = maxCats + 1; i < slots.length; i++) {
-        keyCategoryMap[slots[i]] = null;
+    // Slots 0-2 (keys 1, 2, 8): categories for this page
+    for (let i = 0; i < CATS_PER_PAGE; i++) {
+        if (i < pageCats.length) {
+            items.push({ key: slots[i], label: pageCats[i], action: { type: 'category', value: pageCats[i] } });
+        }
     }
 
+    // Fill remaining slots with "Alle" and navigation
+    if (isLastPage && totalPages > 1) {
+        // Last page of multi-page: "Alle" on next free slot, "Zurück" on key 9
+        const alleSlot = slots[pageCats.length < CATS_PER_PAGE ? pageCats.length : 2];
+        // If page is full, replace last category slot with Alle
+        if (pageCats.length >= CATS_PER_PAGE) items.pop();
+        items.push({ key: alleSlot, label: 'Alle Kategorien', action: { type: 'category', value: null } });
+        items.push({ key: slots[3], label: '\u25C0 Zurück', action: { type: 'nav', value: 'back' } });
+    } else if (isLastPage) {
+        // Single page: just "Alle" on key 9
+        items.push({ key: slots[3], label: 'Alle Kategorien', action: { type: 'category', value: null } });
+    } else {
+        // Not last page: "Weiter" on key 9
+        items.push({ key: slots[3], label: 'Weiter \u25B6', action: { type: 'nav', value: 'next' } });
+    }
+
+    // Build key map
+    items.forEach(item => {
+        keyCategoryMap[item.key] = item.action;
+    });
+
+    // Render grid
     items.forEach(item => {
         const el = document.createElement('div');
         el.className = 'category-option';
+        if (item.action.type === 'nav') el.className += ' nav-option';
         el.innerHTML = `<span class="category-key">${item.key}</span><span class="category-label">${item.label}</span>`;
         grid.appendChild(el);
     });
-}
 
-function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    // Page indicator
+    if (totalPages > 1) {
+        const indicator = document.createElement('div');
+        indicator.className = 'page-indicator';
+        indicator.textContent = `Seite ${categoryPage + 1}/${totalPages}`;
+        grid.appendChild(indicator);
+    }
 }
 
 function startGame(category) {
@@ -115,8 +146,17 @@ function startTutorial() {
 // --- Menu action from server (button press on idle) ---
 socket.on('menu_action', (data) => {
     if (data.action === 'select' && data.key) {
-        const category = keyCategoryMap[data.key];
-        if (category !== undefined) {
+        const action = keyCategoryMap[data.key];
+        if (!action) return;
+
+        if (action.type === 'nav') {
+            if (action.value === 'next') {
+                categoryPage++;
+            } else {
+                categoryPage = 0;
+            }
+            buildCategoryPage();
+        } else if (action.type === 'category') {
             const options = document.querySelectorAll('.category-option');
             options.forEach(opt => {
                 const keyLabel = opt.querySelector('.category-key');
@@ -124,7 +164,7 @@ socket.on('menu_action', (data) => {
                     opt.classList.add('selected');
                 }
             });
-            startGame(category);
+            startGame(action.value);
         }
     }
 });
@@ -269,9 +309,10 @@ socket.on('game_state', (state) => {
     if (phase === 'score_screen') {
         document.getElementById('final-score').textContent = state.score;
         const total = state.total_questions;
-        const msg = state.score === total
+        const agreements = state.agreements;
+        const msg = agreements === total
             ? 'Perfekt! Ihr seid euch in allem einig!'
-            : `${state.score} von ${total} Fragen einig \u2014 nicht schlecht!`;
+            : `${agreements} von ${total} Fragen einig \u2014 ${state.score} Punkte!`;
         document.getElementById('score-message').textContent = msg;
     }
 

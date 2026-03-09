@@ -48,14 +48,14 @@ const AnimationScenes = {
         const vh = window.innerHeight;
 
         const curtainL = CutoutAnimator.spawn(this._img('decorative/curtain-left.png'), {
-            x: -150, y: 0, height: vh,
+            x: -100, y: 0, height: vh,
         });
         const curtainR = CutoutAnimator.spawn(this._img('decorative/curtain-right.png'), {
-            x: vw - 650, y: 0, height: vh,
+            x: vw - 550, y: 0, height: vh,
         });
 
         const announcer = CutoutAnimator.spawn(this._img('characters/announcer.png'), {
-            x: vw / 2 - 150, y: vh - 550, width: 500,
+            x: vw / 2 - 800, y: vh - 650, width: 500,
         });
 
         CutoutAnimator.addWobble(curtainL, 0.5);
@@ -150,8 +150,8 @@ const AnimationScenes = {
         const pendelDisplayW = 274 * pendelScale;
         const pendelPivotX = 125 * pendelScale;
         const pendelPivotY = 75 * pendelScale;
-        const pendelX = machineX + 750 * scale - pendelPivotX;
-        const pendelY = machineY + 825 * scale - pendelPivotY;
+        const pendelX = machineX + 770 * scale - pendelPivotX;
+        const pendelY = machineY + 650 * scale - pendelPivotY;
 
         // --- Zahnrad ---
         const zahnradNatH = 1536;
@@ -195,11 +195,11 @@ const AnimationScenes = {
 
         // --- Bulbs: 3 off, then switch on left to right ---
         const bulbNatPositions = [
-            { x: 300, y: 475 },
-            { x: 375, y: 475 },
-            { x: 450, y: 475 },
+            { x: 330, y: 425 },
+            { x: 430, y: 425 },
+            { x: 530, y: 425 },
         ];
-        const bulbDisplayH = 180 * scale;
+        const bulbDisplayH = 150 * scale;
         const bulbTargets = bulbNatPositions.map(pos => ({
             x: machineX + pos.x * scale - bulbDisplayH / 2,
             y: machineY + pos.y * scale - bulbDisplayH / 2,
