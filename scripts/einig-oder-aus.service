@@ -1,0 +1,15 @@
+[Unit]
+Description=Einig oder Aus! — Die Demokratiemaschine
+After=network.target
+
+[Service]
+Type=simple
+User=%I
+WorkingDirectory=/home/%I/src/EinigOderAus
+ExecStart=/usr/bin/env uv run python app.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

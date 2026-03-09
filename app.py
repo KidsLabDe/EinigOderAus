@@ -24,7 +24,7 @@ def create_app() -> tuple[Flask, SocketIO, GameStateMachine]:
 
 def main():
     app, socketio, _ = create_app()
-    socketio.run(app, host="0.0.0.0", port=config.PORT, debug=config.DEBUG,
+    socketio.run(app, host="0.0.0.0", port=config.port(), debug=config.debug(),
                  allow_unsafe_werkzeug=True)
 
 
