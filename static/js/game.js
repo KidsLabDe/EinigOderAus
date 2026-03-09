@@ -3,28 +3,67 @@ const socket = io();
 let previousPhase = null;
 let categoriesLoaded = false;
 let debateUrgentTriggered = false;
+let tickStarted = false;
 
-// --- Load categories on startup ---
+// Key order for category mapping: P1-Ja, P1-Nein, P2-Ja, P2-Nein
+let keyOrder = ['1', '2', '8', '9'];
+// Map: key -> category (null = alle)
+let keyCategoryMap = {};
+
+// Load key config
+fetch('/api/config')
+    .then(r => r.json())
+    .then(cfg => {
+        const k = cfg.keys;
+        keyOrder = [k.player1_ja, k.player1_nein, k.player2_ja, k.player2_nein];
+    })
+    .catch(() => {});
+
+// --- Load categories and build key mapping ---
 function loadCategories() {
-    if (categoriesLoaded) return;
     fetch('/api/categories')
         .then(r => r.json())
         .then(categories => {
-            const container = document.getElementById('category-buttons');
-            container.innerHTML = '';
-            categories.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = 'btn btn-category';
-                btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-                btn.onclick = () => startGame(cat);
-                container.appendChild(btn);
-            });
+            buildCategoryGrid(categories);
             categoriesLoaded = true;
         });
 }
 
+function buildCategoryGrid(categories) {
+    const grid = document.getElementById('category-grid');
+    grid.innerHTML = '';
+    keyCategoryMap = {};
+
+    const slots = keyOrder.slice(0, 4);
+    const items = [];
+
+    const maxCats = Math.min(categories.length, slots.length - 1);
+    for (let i = 0; i < maxCats; i++) {
+        items.push({ key: slots[i], label: capitalize(categories[i]), category: categories[i] });
+        keyCategoryMap[slots[i]] = categories[i];
+    }
+    const alleSlot = slots[maxCats];
+    items.push({ key: alleSlot, label: 'Alle Kategorien', category: null });
+    keyCategoryMap[alleSlot] = null;
+
+    for (let i = maxCats + 1; i < slots.length; i++) {
+        keyCategoryMap[slots[i]] = null;
+    }
+
+    items.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'category-option';
+        el.innerHTML = `<span class="category-key">${item.key}</span><span class="category-label">${item.label}</span>`;
+        grid.appendChild(el);
+    });
+}
+
+function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function startGame(category) {
-    // Show countdown, then start
+    AudioManager.start();
     AnimationScenes.gameStart();
     AnimationScenes.countdown(() => {
         socket.emit('start_game', { category: category });
@@ -46,9 +85,9 @@ function showScreen(phase) {
 
 // --- Vote indicator helpers ---
 function voteIndicator(player, showVotes) {
-    if (!player.has_voted) return '⏳';
-    if (!showVotes) return '✔';
-    return player.vote === 'ja' ? '👍 Ja' : '👎 Nein';
+    if (!player.has_voted) return '\u23F3';
+    if (!showVotes) return '\u2714';
+    return player.vote === 'ja' ? '\uD83D\uDC4D Ja' : '\uD83D\uDC4E Nein';
 }
 
 function voteClass(player, showVotes) {
@@ -56,6 +95,39 @@ function voteClass(player, showVotes) {
     if (!showVotes) return 'voted';
     return player.vote === 'ja' ? 'ja' : 'nein';
 }
+
+// --- Tutorial animation on idle screen ---
+function startTutorial() {
+    const steps = document.querySelectorAll('.tutorial-step');
+    let current = 0;
+
+    function showStep() {
+        steps.forEach((s, i) => {
+            s.classList.toggle('visible', i === current);
+        });
+        current = (current + 1) % steps.length;
+    }
+
+    showStep();
+    setInterval(showStep, 4000);
+}
+
+// --- Menu action from server (button press on idle) ---
+socket.on('menu_action', (data) => {
+    if (data.action === 'select' && data.key) {
+        const category = keyCategoryMap[data.key];
+        if (category !== undefined) {
+            const options = document.querySelectorAll('.category-option');
+            options.forEach(opt => {
+                const keyLabel = opt.querySelector('.category-key');
+                if (keyLabel && keyLabel.textContent === data.key) {
+                    opt.classList.add('selected');
+                }
+            });
+            startGame(category);
+        }
+    }
+});
 
 // --- Handle game state updates ---
 socket.on('game_state', (state) => {
@@ -65,39 +137,44 @@ socket.on('game_state', (state) => {
     // Phase transition sounds + animations
     if (previousPhase !== phase) {
         debateUrgentTriggered = false;
+        tickStarted = false;
+        AudioManager.stop('tick');
 
         if (phase === 'idle') {
             AnimationScenes.idle();
-        } else if (phase === 'voting' && previousPhase === 'idle') {
-            AnimationScenes.gameStart();
-            setTimeout(() => AnimationScenes.votingEnter(), 600);
-        } else if (phase === 'voting' && (previousPhase === 'debate' || previousPhase === 'voting')) {
-            AnimationScenes.agreement();
+        } else if (phase === 'transition') {
+            if (state.transition_reason === 'agreement') {
+                // After agreement: thumbs-up first, then machine
+                AnimationScenes.agreement();
+                AudioManager.agreement();
+                setTimeout(() => {
+                    AnimationScenes.transition(state.timer_total);
+                    AudioManager.transition();
+                }, 1800);
+            } else {
+                // First question or timeout: machine directly
+                AnimationScenes.transition(state.timer_total);
+                AudioManager.transition();
+            }
+        } else if (phase === 'voting') {
+            CutoutAnimator.clearAll();
+            setTimeout(() => AnimationScenes.votingEnter(), 200);
+            AudioManager.voting();
         } else if (phase === 'debate') {
             AnimationScenes.disagreement();
-        } else if (phase === 'game_over') {
-            AnimationScenes.gameOver();
-        } else if (phase === 'score_screen') {
-            AnimationScenes.scoreScreen(state.score, state.total_questions);
-        }
-
-        // Voting enter for subsequent questions (not first)
-        if (phase === 'voting' && previousPhase === 'voting') {
-            setTimeout(() => AnimationScenes.votingEnter(), 800);
-        }
-
-        if (phase === 'debate') {
             AudioManager.buzzer();
         } else if (phase === 'game_over') {
+            AnimationScenes.gameOver();
             AudioManager.alarm();
-        } else if (phase === 'voting' && previousPhase === 'debate') {
-            AudioManager.agreement();
-        } else if (phase === 'voting' && previousPhase === 'voting' && state.score > 0) {
-            AudioManager.agreement();
+            // Stomp sound when foot drops (2s delay matches animation)
+            setTimeout(() => AudioManager.stomp(), 2000);
+        } else if (phase === 'score_screen') {
+            AnimationScenes.scoreScreen(state.score, state.total_questions);
+            AudioManager.score();
         }
 
-        // Flash effect on agreement during voting transition
-        if (phase === 'voting' && previousPhase !== null && previousPhase !== 'idle') {
+        // Flash effects
+        if (phase === 'voting' && previousPhase === 'transition' && state.transition_reason === 'agreement') {
             const screen = document.getElementById('screen-voting');
             screen.classList.add('flash-agree');
             setTimeout(() => screen.classList.remove('flash-agree'), 600);
@@ -110,12 +187,29 @@ socket.on('game_state', (state) => {
         }
     }
 
+    // Tick sound: 6s long, start once at 6 seconds remaining
+    if ((phase === 'voting' || phase === 'debate') && state.timer_remaining === 6 && !tickStarted) {
+        tickStarted = true;
+        AudioManager.tick();
+    }
+
     // Load categories when idle
     if (phase === 'idle') {
         loadCategories();
+        document.querySelectorAll('.category-option.selected').forEach(
+            el => el.classList.remove('selected')
+        );
     }
 
     showScreen(phase);
+
+    // Update transition screen
+    if (phase === 'transition') {
+        document.getElementById('transition-question-number').textContent =
+            `Frage ${state.question_number}/${state.total_questions}`;
+        document.getElementById('transition-score-display').textContent =
+            state.score > 0 ? `Punkte: ${state.score}` : '';
+    }
 
     // Update voting screen
     if (phase === 'voting') {
@@ -177,7 +271,7 @@ socket.on('game_state', (state) => {
         const total = state.total_questions;
         const msg = state.score === total
             ? 'Perfekt! Ihr seid euch in allem einig!'
-            : `${state.score} von ${total} Fragen einig — nicht schlecht!`;
+            : `${state.score} von ${total} Fragen einig \u2014 nicht schlecht!`;
         document.getElementById('score-message').textContent = msg;
     }
 
@@ -190,3 +284,6 @@ loadCategories();
 // Initialize animation engine
 CutoutAnimator.init();
 AnimationScenes.preload();
+
+// Start tutorial animation
+startTutorial();

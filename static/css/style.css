@@ -141,6 +141,108 @@ html, body {
     margin-top: 1.5em;
 }
 
+/* --- Tutorial steps --- */
+.tutorial {
+    position: relative;
+    height: 5em;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 1.5em;
+    overflow: hidden;
+}
+
+.tutorial-step {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8em;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+}
+
+.tutorial-step.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tutorial-icon {
+    font-size: 3.5em;
+}
+
+.tutorial-text {
+    font-size: 2em;
+    color: #ccc;
+    text-align: left;
+}
+
+/* --- Category grid (idle screen) --- */
+.category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.category-option {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    background: #16213e;
+    border: 2px solid #0f3460;
+    border-radius: 0.5em;
+    padding: 0.8em 1.2em;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.category-option.selected {
+    border-color: #4ecca3;
+    background: #0f3460;
+}
+
+.category-key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2em;
+    height: 2.2em;
+    background: #e94560;
+    color: #fff;
+    font-size: 1.3em;
+    font-weight: 900;
+    border-radius: 0.3em;
+    flex-shrink: 0;
+}
+
+.category-label {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #eee;
+}
+
+/* --- Start / Restart prompt --- */
+.start-prompt, .restart-hint {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #4ecca3;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.pulse-text {
+    animation: pulse-text 2s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
 /* --- Question header --- */
 .question-header {
     display: flex;
@@ -282,6 +384,19 @@ html, body {
 .score-message {
     font-size: 1.3em;
     color: #aaa;
+}
+
+/* --- Transition screen (Konsensomat) --- */
+#screen-transition {
+    position: relative;
+}
+
+#screen-transition .question-header {
+    position: absolute;
+    top: 1.5em;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
 }
 
 /* --- Animation overlay --- */

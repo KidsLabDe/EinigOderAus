@@ -4,6 +4,7 @@ from enum import Enum
 
 class GamePhase(Enum):
     IDLE = "idle"
+    TRANSITION = "transition"
     VOTING = "voting"
     EVALUATING = "evaluating"
     DEBATE = "debate"

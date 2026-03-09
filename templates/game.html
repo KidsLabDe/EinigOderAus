@@ -12,12 +12,36 @@
 <div id="screen-idle" class="screen active">
     <h1>Einig oder Aus!</h1>
     <p class="subtitle">Die Demokratiemaschine</p>
-    <div class="category-select">
-        <h2>Kategorie wählen</h2>
-        <div id="category-buttons"></div>
-        <button class="btn btn-start" onclick="startGame(null)">Alle Kategorien</button>
+
+    <div class="tutorial">
+        <div class="tutorial-step visible">
+            <div class="tutorial-icon">&#x1F3AD;</div>
+            <div class="tutorial-text">Zwei Spieler treten an &mdash; seid ihr euch einig?</div>
+        </div>
+        <div class="tutorial-step">
+            <div class="tutorial-icon">&#x2753;</div>
+            <div class="tutorial-text">Eine Frage erscheint &mdash; stimmt mit Ja oder Nein ab!</div>
+        </div>
+        <div class="tutorial-step">
+            <div class="tutorial-icon">&#x2705;</div>
+            <div class="tutorial-text">Einig? Punkt! &mdash; Uneinig? Debatte!</div>
+        </div>
+        <div class="tutorial-step">
+            <div class="tutorial-icon">&#x23F1;&#xFE0F;</div>
+            <div class="tutorial-text">In der Debatte habt ihr 2 Minuten &mdash; einigt euch, oder es ist AUS!</div>
+        </div>
     </div>
-    <p class="hint">Spieler 1: Tasten 1 (Ja) / 2 (Nein) &mdash; Spieler 2: Tasten 9 (Ja) / 0 (Nein)</p>
+
+    <div class="category-grid" id="category-grid"></div>
+    <div class="start-prompt pulse-text">W&auml;hlt eine Kategorie!</div>
+</div>
+
+<!-- TRANSITION SCREEN (Konsensomat) -->
+<div id="screen-transition" class="screen">
+    <div class="question-header">
+        <span id="transition-question-number"></span>
+        <span id="transition-score-display"></span>
+    </div>
 </div>
 
 <!-- VOTING SCREEN -->
@@ -34,11 +58,11 @@
     <div class="vote-status">
         <div class="player-vote" id="p1-vote">
             <span class="player-name">Spieler 1</span>
-            <span class="vote-indicator" id="p1-indicator">⏳</span>
+            <span class="vote-indicator" id="p1-indicator">&#x23F3;</span>
         </div>
         <div class="player-vote" id="p2-vote">
             <span class="player-name">Spieler 2</span>
-            <span class="vote-indicator" id="p2-indicator">⏳</span>
+            <span class="vote-indicator" id="p2-indicator">&#x23F3;</span>
         </div>
     </div>
 </div>
@@ -56,11 +80,11 @@
     <div class="vote-status">
         <div class="player-vote" id="debate-p1-vote">
             <span class="player-name">Spieler 1</span>
-            <span class="vote-indicator" id="debate-p1-indicator">⏳</span>
+            <span class="vote-indicator" id="debate-p1-indicator">&#x23F3;</span>
         </div>
         <div class="player-vote" id="debate-p2-vote">
             <span class="player-name">Spieler 2</span>
-            <span class="vote-indicator" id="debate-p2-indicator">⏳</span>
+            <span class="vote-indicator" id="debate-p2-indicator">&#x23F3;</span>
         </div>
     </div>
 </div>
@@ -70,7 +94,7 @@
     <div class="game-over-label">GAME OVER</div>
     <div class="game-over-message">Keine Einigung erzielt!</div>
     <div class="final-score">Punkte: <span id="gameover-score">0</span></div>
-    <button class="btn btn-restart" onclick="restartGame()">Neues Spiel</button>
+    <div class="restart-hint pulse-text">Beliebige Taste zum Neustarten</div>
 </div>
 
 <!-- SCORE SCREEN -->
@@ -78,7 +102,7 @@
     <div class="score-screen-label">Geschafft!</div>
     <div class="final-score">Punkte: <span id="final-score">0</span></div>
     <div class="score-message" id="score-message"></div>
-    <button class="btn btn-restart" onclick="restartGame()">Neues Spiel</button>
+    <div class="restart-hint pulse-text">Beliebige Taste zum Neustarten</div>
 </div>
 
 <!-- Animation Overlay -->

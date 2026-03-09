@@ -24,6 +24,11 @@ const AnimationScenes = {
             this._img('objects/thumbs-up-woman.png'),
             this._img('objects/gavel.png'),
             this._img('objects/trophy.png'),
+            this._img('objects/wartemaschine.png'),
+            this._img('objects/pendel.png'),
+            this._img('objects/zahnrad.png'),
+            this._img('objects/steam.png'),
+            this._img('objects/gameover.png'),
             this._img('decorative/curtain-left.png'),
             this._img('decorative/curtain-right.png'),
             this._img('decorative/foot.png'),
@@ -40,7 +45,6 @@ const AnimationScenes = {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        // Curtains framing the screen
         const curtainL = CutoutAnimator.spawn(this._img('decorative/curtain-left.png'), {
             x: -150, y: 0, height: vh,
         });
@@ -48,14 +52,13 @@ const AnimationScenes = {
             x: vw - 650, y: 0, height: vh,
         });
 
-        // Announcer figure center-bottom
         const announcer = CutoutAnimator.spawn(this._img('characters/announcer.png'), {
             x: vw / 2 - 150, y: vh - 550, width: 500,
         });
 
-        CutoutAnimator.addWobble(curtainL, 1);
-        CutoutAnimator.addWobble(curtainR, 1);
-        CutoutAnimator.addWobble(announcer, 2);
+        CutoutAnimator.addWobble(curtainL, 0.5);
+        CutoutAnimator.addWobble(curtainR, 0.5);
+        CutoutAnimator.addWobble(announcer, 1.2);
     },
 
     /** Game start — curtains slide out */
@@ -64,7 +67,6 @@ const AnimationScenes = {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        // Briefly show curtains then slide them away
         const curtainL = CutoutAnimator.spawn(this._img('decorative/curtain-left.png'), {
             x: 0, y: 0, height: vh,
         });
@@ -72,8 +74,8 @@ const AnimationScenes = {
             x: vw - 200, y: 0, height: vh,
         });
 
-        CutoutAnimator.slideOut(curtainL, 'left', 0.5);
-        CutoutAnimator.slideOut(curtainR, 'right', 0.5);
+        CutoutAnimator.slideOut(curtainL, 'left', 0.6);
+        CutoutAnimator.slideOut(curtainR, 'right', 0.6);
     },
 
     /** Countdown before game starts — 3, 2, 1, LOS! with cutout images */
@@ -88,7 +90,6 @@ const AnimationScenes = {
         let i = 0;
         const self = this;
 
-        // Clear any text content
         overlay.innerHTML = '';
         overlay.classList.add('active');
         gsap.set(overlay, { opacity: 1 });
@@ -103,21 +104,17 @@ const AnimationScenes = {
                 return;
             }
 
-            // Remove previous image
             overlay.innerHTML = '';
-
             const img = document.createElement('img');
             img.src = self._img(imgFiles[i]);
             img.style.maxWidth = '70vw';
             img.style.maxHeight = '80vh';
             overlay.appendChild(img);
 
-            // Pop-in effect
             gsap.fromTo(img,
                 { scale: 3, opacity: 0 },
                 { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(2)' }
             );
-            // Fade out before next
             gsap.to(img, { opacity: 0, scale: 0.3, duration: 0.25, delay: 0.65 });
 
             i++;
@@ -125,6 +122,131 @@ const AnimationScenes = {
         }
 
         showNext();
+    },
+
+    /**
+     * Konsensomat transition — steampunk machine with pendulum, gear, and steam.
+     */
+    transition(duration) {
+        CutoutAnimator.clearAll();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // --- Sizing ---
+        const machineDisplayH = vh * 0.75;
+        const machineNatW = 1024, machineNatH = 1207;
+        const scale = machineDisplayH / machineNatH;
+        const machineDisplayW = machineNatW * scale;
+
+        const machineX = (vw - machineDisplayW) / 2;
+        const machineY = (vh - machineDisplayH) / 2 + vh * 0.05;
+
+        // --- Pendel ---
+        const pendelNatH = 1115;
+        const pendelDisplayH = machineDisplayH * 0.45;
+        const pendelScale = pendelDisplayH / pendelNatH;
+        const pendelDisplayW = 274 * pendelScale;
+        const pendelPivotX = 125 * pendelScale;
+        const pendelPivotY = 75 * pendelScale;
+        const pendelX = machineX + 750 * scale - pendelPivotX;
+        const pendelY = machineY + 825 * scale - pendelPivotY;
+
+        // --- Zahnrad ---
+        const zahnradNatH = 1536;
+        const zahnradDisplayH = machineDisplayH * 0.25;
+        const zahnradScale = zahnradDisplayH / zahnradNatH;
+        const zahnradDisplayW = 1024 * zahnradScale;
+        const zahnradCenterX = 500 * zahnradScale;
+        const zahnradCenterY = 725 * zahnradScale;
+        const zahnradX = machineX + 925 * scale - zahnradCenterX;
+        const zahnradY = machineY + 500 * scale - zahnradCenterY;
+
+        // --- Steam spawn point ---
+        const steamOriginX = machineX + machineDisplayW * 0.72;
+        const steamOriginY = machineY - 20;
+
+        // === SPAWN off-screen ===
+        const machine = CutoutAnimator.spawn(this._img('objects/wartemaschine.png'), {
+            x: -machineDisplayW - 100, y: machineY, width: machineDisplayW,
+        });
+        const pendel = CutoutAnimator.spawn(this._img('objects/pendel.png'), {
+            x: -pendelDisplayW - 200, y: -pendelDisplayH, width: pendelDisplayW,
+            transformOrigin: pendelPivotX + 'px ' + pendelPivotY + 'px',
+        });
+        const zahnrad = CutoutAnimator.spawn(this._img('objects/zahnrad.png'), {
+            x: -zahnradDisplayW - 200, y: vh + 100, width: zahnradDisplayW,
+            transformOrigin: zahnradCenterX + 'px ' + zahnradCenterY + 'px',
+        });
+
+        // === ENTER ===
+        const enterTl = gsap.timeline();
+        enterTl.to(machine, {
+            x: machineX, duration: 1.4, ease: 'power2.out',
+        }, 0);
+        enterTl.to(pendel, {
+            x: pendelX, y: pendelY, duration: 1.0, ease: 'power2.out',
+        }, 0.3);
+        enterTl.to(zahnrad, {
+            x: zahnradX, y: zahnradY, duration: 1.0, ease: 'power2.out',
+        }, 0.5);
+        CutoutAnimator.track(enterTl);
+
+        // === RUNNING ===
+        const runDelay = 1.6;
+
+        // Pendel — smooth swing
+        const pendelSwing = gsap.timeline({ repeat: -1, yoyo: true, delay: runDelay });
+        pendelSwing.to(pendel, { rotation: 25, duration: 1.2, ease: 'sine.inOut' });
+        pendelSwing.to(pendel, { rotation: -25, duration: 1.2, ease: 'sine.inOut' });
+        CutoutAnimator.track(pendelSwing);
+
+        // Zahnrad — smooth continuous rotation
+        const gearSpin = gsap.timeline({ repeat: -1, delay: runDelay });
+        gearSpin.to(zahnrad, { rotation: 360, duration: 4, ease: 'none' });
+        CutoutAnimator.track(gearSpin);
+
+        // Machine gentle wobble
+        setTimeout(() => CutoutAnimator.addWobble(machine, 0.3), runDelay * 1000);
+
+        // Steam puffs
+        const steamInterval = setInterval(() => {
+            this._spawnSteamPuff(steamOriginX, steamOriginY);
+        }, 1800);
+        setTimeout(() => this._spawnSteamPuff(steamOriginX, steamOriginY), runDelay * 1000);
+
+        // === EXIT ===
+        const exitTime = (duration - 2) * 1000;
+        setTimeout(() => {
+            clearInterval(steamInterval);
+            const exitTl = gsap.timeline();
+            exitTl.to(machine, { x: vw + 100, duration: 1.2, ease: 'power2.in' }, 0);
+            exitTl.to(pendel, { x: vw + 200, y: -pendelDisplayH, duration: 0.9, ease: 'power2.in' }, 0.1);
+            exitTl.to(zahnrad, { x: vw + 200, y: vh + 100, duration: 0.9, ease: 'power2.in' }, 0.2);
+            CutoutAnimator.track(exitTl);
+        }, Math.max(exitTime, 3000));
+    },
+
+    /** Spawn a single steam puff that rises and fades */
+    _spawnSteamPuff(originX, originY) {
+        const steamSize = 80 + Math.random() * 40;
+        const xOffset = (Math.random() - 0.5) * 60;
+
+        const puff = CutoutAnimator.spawn(this._img('objects/steam.png'), {
+            x: originX + xOffset, y: originY,
+            width: steamSize, opacity: 0.7,
+        });
+
+        const tl = gsap.timeline();
+        tl.to(puff, {
+            y: originY - 200 - Math.random() * 150,
+            x: originX + xOffset + (Math.random() - 0.5) * 120,
+            scale: 2.5 + Math.random(),
+            opacity: 0,
+            duration: 3,
+            ease: 'power1.out',
+            onComplete: () => CutoutAnimator.despawn(puff),
+        });
+        CutoutAnimator.track(tl);
     },
 
     /** New question — thinking figures slide in from sides */
@@ -140,14 +262,13 @@ const AnimationScenes = {
             width: 320, y: vh - 580,
         });
 
-        CutoutAnimator.slideIn(figL, 'left', { x: -60, duration: 0.5 });
-        CutoutAnimator.slideIn(figR, 'right', { x: vw - 260, duration: 0.5 });
+        CutoutAnimator.slideIn(figL, 'left', { x: -60, duration: 0.6 });
+        CutoutAnimator.slideIn(figR, 'right', { x: vw - 260, duration: 0.6 });
 
-        // Add wobble after slide-in
         setTimeout(() => {
-            CutoutAnimator.addWobble(figL, 1.5);
-            CutoutAnimator.addWobble(figR, 1.5);
-        }, 600);
+            CutoutAnimator.addWobble(figL, 1);
+            CutoutAnimator.addWobble(figR, 1);
+        }, 700);
     },
 
     /** Agreement — thumbs-up pops in center, bounces, fades */
@@ -162,13 +283,11 @@ const AnimationScenes = {
             width: 280, x: vw / 2 - 140, y: vh / 2 + 20, opacity: 0,
         });
 
-        const tl = CutoutAnimator.popIn(thumb);
-        // Bounce up
+        CutoutAnimator.popIn(thumb);
         const bounce = gsap.timeline({ delay: 0.4 });
-        bounce.to(thumb, { y: vh / 2 - 30, duration: 0.2, ease: 'steps(3)' });
-        bounce.to(thumb, { y: vh / 2 + 20, duration: 0.15, ease: 'steps(2)' });
-        // Fade out
-        bounce.to(thumb, { opacity: 0, duration: 0.3, ease: 'steps(4)', delay: 0.5 });
+        bounce.to(thumb, { y: vh / 2 - 30, duration: 0.25, ease: 'power2.out' });
+        bounce.to(thumb, { y: vh / 2 + 20, duration: 0.2, ease: 'bounce.out' });
+        bounce.to(thumb, { opacity: 0, duration: 0.4, ease: 'power1.in', delay: 0.5 });
         CutoutAnimator.track(bounce);
     },
 
@@ -178,7 +297,6 @@ const AnimationScenes = {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        // Arguing figures from sides
         const figL = CutoutAnimator.spawn(this._img('characters/figure-arguing-left.png'), {
             width: 340, y: vh - 600,
         });
@@ -186,44 +304,61 @@ const AnimationScenes = {
             width: 340, y: vh - 600,
         });
 
-        CutoutAnimator.slideIn(figL, 'left', { x: -70, duration: 0.3 });
-        CutoutAnimator.slideIn(figR, 'right', { x: vw - 270, duration: 0.3 });
+        CutoutAnimator.slideIn(figL, 'left', { x: -70, duration: 0.4 });
+        CutoutAnimator.slideIn(figR, 'right', { x: vw - 270, duration: 0.4 });
 
-        // Gavel drops from above center
         const gavel = CutoutAnimator.spawn(this._img('objects/gavel.png'), {
             width: 120, x: vw / 2 - 60,
         });
         CutoutAnimator.stompDown(gavel, vh / 2 - 60);
 
-        // Add intense wobble after landing
         setTimeout(() => {
-            CutoutAnimator.addWobble(figL, 3);
-            CutoutAnimator.addWobble(figR, 3);
-            CutoutAnimator.hingeMotion(gavel, 'right bottom', '', 15, 0.4);
+            CutoutAnimator.addWobble(figL, 2);
+            CutoutAnimator.addWobble(figR, 2);
+            CutoutAnimator.hingeMotion(gavel, 'right bottom', '', 12, 0.5);
         }, 500);
     },
 
     /** Debate getting urgent — ramp up wobble intensity */
     debateUrgent() {
-        // Find all current images and add intense wobble
         const imgs = document.querySelectorAll('#animation-layer img');
         imgs.forEach(img => {
-            CutoutAnimator.addWobble(img, 5);
+            CutoutAnimator.addWobble(img, 4);
         });
     },
 
-    /** Game over — Monty Python foot stomps down */
+    /** Game over — gameover.png slides in, then Monty Python foot stomps it */
     gameOver() {
         CutoutAnimator.clearAll();
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        const foot = CutoutAnimator.spawn(this._img('decorative/foot.png'), {
-            width: 350, x: vw / 2 - 175,
-            transformOrigin: 'center top',
+        // Game over machine image — centered
+        const goW = vw * 0.4;
+        const goImg = CutoutAnimator.spawn(this._img('objects/gameover.png'), {
+            width: goW, x: vw / 2 - goW / 2, y: vh + 50,
         });
 
-        CutoutAnimator.stompDown(foot, vh / 2 - 200);
+        // Rise up from bottom
+        const riseTl = gsap.timeline();
+        riseTl.to(goImg, {
+            y: vh * 0.15,
+            duration: 1.0,
+            ease: 'power2.out',
+        });
+        CutoutAnimator.track(riseTl);
+        setTimeout(() => CutoutAnimator.addWobble(goImg, 1), 1100);
+
+        // After a pause, foot stomps down on top
+        setTimeout(() => {
+            const footW = vw * 0.35;
+            const foot = CutoutAnimator.spawn(this._img('decorative/foot.png'), {
+                width: footW,
+                x: vw / 2 - footW / 2,
+                transformOrigin: 'center top',
+            });
+            CutoutAnimator.stompDown(foot, vh * 0.05);
+        }, 2000);
     },
 
     /** Score screen — trophy rises, cheering figures */
@@ -232,7 +367,6 @@ const AnimationScenes = {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        // Trophy rises from bottom
         const trophy = CutoutAnimator.spawn(this._img('objects/trophy.png'), {
             width: 300, x: vw / 2 - 150, y: vh + 50,
         });
@@ -240,13 +374,12 @@ const AnimationScenes = {
         const rise = gsap.timeline();
         rise.to(trophy, {
             y: vh / 4 - 150,
-            duration: 0.8,
-            ease: 'steps(10)',
+            duration: 1.0,
+            ease: 'power2.out',
         });
         CutoutAnimator.track(rise);
-        CutoutAnimator.addWobble(trophy, 1.5);
+        CutoutAnimator.addWobble(trophy, 1);
 
-        // Cheering figures from sides
         const figL = CutoutAnimator.spawn(this._img('characters/figure-cheering-left.png'), {
             width: 320, y: vh - 580,
         });
@@ -254,12 +387,12 @@ const AnimationScenes = {
             width: 320, y: vh - 580,
         });
 
-        CutoutAnimator.slideIn(figL, 'left', { x: -60, duration: 0.6 });
-        CutoutAnimator.slideIn(figR, 'right', { x: vw - 260, duration: 0.6 });
+        CutoutAnimator.slideIn(figL, 'left', { x: -60, duration: 0.7 });
+        CutoutAnimator.slideIn(figR, 'right', { x: vw - 260, duration: 0.7 });
 
         setTimeout(() => {
-            CutoutAnimator.addWobble(figL, 3);
-            CutoutAnimator.addWobble(figR, 3);
-        }, 700);
+            CutoutAnimator.addWobble(figL, 2);
+            CutoutAnimator.addWobble(figR, 2);
+        }, 800);
     },
 };

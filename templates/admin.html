@@ -3,14 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Einig oder Aus! — Admin</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Einig oder Aus! &mdash; Admin</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 2em;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { color: #e94560; margin-bottom: 0.5em; }
+        h2 { color: #4ecca3; margin: 1.5em 0 0.5em; font-size: 1.3em; }
+        a { color: #4ecca3; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1em;
+            margin-bottom: 1.5em;
+        }
+        .stat-card {
+            background: #16213e;
+            border-radius: 0.5em;
+            padding: 1em;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 900;
+            color: #4ecca3;
+        }
+        .stat-label {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: 0.3em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5em;
+        }
+        th, td {
+            padding: 0.5em 0.8em;
+            text-align: left;
+            border-bottom: 1px solid #16213e;
+        }
+        th { color: #aaa; font-weight: 600; }
+        td { color: #ccc; }
+
+        .config-section {
+            background: #16213e;
+            border-radius: 0.5em;
+            padding: 1.2em;
+            margin-top: 0.5em;
+        }
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 1em;
+            margin-bottom: 0.7em;
+        }
+        .config-row label {
+            min-width: 140px;
+            color: #aaa;
+        }
+        .config-row input {
+            background: #0f3460;
+            border: 1px solid #1a1a2e;
+            color: #eee;
+            padding: 0.4em 0.7em;
+            border-radius: 0.3em;
+            font-size: 1em;
+            width: 80px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.5em 1.2em;
+            font-size: 1em;
+            border: none;
+            border-radius: 0.3em;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 0.5em;
+        }
+        .btn-save { background: #4ecca3; color: #1a1a2e; }
+        .btn-danger { background: #e94560; color: #fff; }
+        .btn-back { background: #0f3460; color: #eee; text-decoration: none; }
+
+        .bar { display: inline-block; height: 1em; background: #4ecca3; border-radius: 2px; margin-right: 0.5em; vertical-align: middle; }
+        .msg { color: #4ecca3; font-size: 0.9em; margin-left: 1em; opacity: 0; transition: opacity 0.3s; }
+        .msg.show { opacity: 1; }
+    </style>
 </head>
 <body>
-    <div class="screen active" style="text-align:center; padding-top: 3em;">
-        <h1>Admin</h1>
-        <p>Fragenverwaltung — kommt bald.</p>
-        <a href="/" class="btn btn-start">Zurück zum Spiel</a>
+    <h1>Admin</h1>
+    <a href="/" class="btn btn-back">Zum Spiel</a>
+
+    <!-- Stats Overview -->
+    <h2>Statistiken</h2>
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Controversial Questions -->
+    <h2>Kontroverseste Fragen</h2>
+    <table id="controversial-table">
+        <thead><tr><th>Frage</th><th>Einigungsrate</th><th>Gespielt</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Recent Sessions -->
+    <h2>Letzte Spiele</h2>
+    <table id="sessions-table">
+        <thead><tr><th>Zeit</th><th>Punkte</th><th>Kategorie</th><th>Ergebnis</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Config: Timers -->
+    <h2>Timer-Einstellungen</h2>
+    <div class="config-section">
+        <div class="config-row">
+            <label>Abstimmungszeit (Sek.)</label>
+            <input type="number" id="cfg-voting" min="5" max="60">
+        </div>
+        <div class="config-row">
+            <label>Debattenzeit (Sek.)</label>
+            <input type="number" id="cfg-debate" min="30" max="600">
+        </div>
+        <div class="config-row">
+            <label>Überleitung (Sek.)</label>
+            <input type="number" id="cfg-transition" min="3" max="30">
+        </div>
+        <div class="config-row">
+            <label>Fragen pro Spiel</label>
+            <input type="number" id="cfg-questions" min="1" max="50">
+        </div>
+        <button class="btn btn-save" onclick="saveTimers()">Speichern</button>
+        <span class="msg" id="timer-msg">Gespeichert!</span>
     </div>
+
+    <!-- Config: Keys -->
+    <h2>Tasten-Belegung</h2>
+    <div class="config-section">
+        <div class="config-row">
+            <label>Spieler 1 &mdash; Ja</label>
+            <input type="text" id="cfg-p1ja" maxlength="1">
+        </div>
+        <div class="config-row">
+            <label>Spieler 1 &mdash; Nein</label>
+            <input type="text" id="cfg-p1nein" maxlength="1">
+        </div>
+        <div class="config-row">
+            <label>Spieler 2 &mdash; Ja</label>
+            <input type="text" id="cfg-p2ja" maxlength="1">
+        </div>
+        <div class="config-row">
+            <label>Spieler 2 &mdash; Nein</label>
+            <input type="text" id="cfg-p2nein" maxlength="1">
+        </div>
+        <button class="btn btn-save" onclick="saveKeys()">Speichern</button>
+        <span class="msg" id="keys-msg">Gespeichert!</span>
+    </div>
+
+    <h2>Daten</h2>
+    <button class="btn btn-danger" onclick="resetStats()">Statistiken zurücksetzen</button>
+
+<script>
+function flashMsg(id) {
+    const el = document.getElementById(id);
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function loadConfig() {
+    fetch('/api/config').then(r => r.json()).then(cfg => {
+        document.getElementById('cfg-voting').value = cfg.timers.voting_seconds;
+        document.getElementById('cfg-debate').value = cfg.timers.debate_seconds;
+        document.getElementById('cfg-transition').value = cfg.timers.transition_seconds;
+        document.getElementById('cfg-questions').value = cfg.timers.questions_per_game;
+        document.getElementById('cfg-p1ja').value = cfg.keys.player1_ja;
+        document.getElementById('cfg-p1nein').value = cfg.keys.player1_nein;
+        document.getElementById('cfg-p2ja').value = cfg.keys.player2_ja;
+        document.getElementById('cfg-p2nein').value = cfg.keys.player2_nein;
+    });
+}
+
+function saveTimers() {
+    const data = {
+        voting_seconds: parseInt(document.getElementById('cfg-voting').value),
+        debate_seconds: parseInt(document.getElementById('cfg-debate').value),
+        transition_seconds: parseInt(document.getElementById('cfg-transition').value),
+        questions_per_game: parseInt(document.getElementById('cfg-questions').value),
+    };
+    fetch('/api/config/timers', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+    }).then(() => flashMsg('timer-msg'));
+}
+
+function saveKeys() {
+    const data = {
+        player1_ja: document.getElementById('cfg-p1ja').value,
+        player1_nein: document.getElementById('cfg-p1nein').value,
+        player2_ja: document.getElementById('cfg-p2ja').value,
+        player2_nein: document.getElementById('cfg-p2nein').value,
+    };
+    fetch('/api/config/keys', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+    }).then(() => flashMsg('keys-msg'));
+}
+
+function loadStats() {
+    fetch('/api/stats').then(r => r.json()).then(stats => {
+        // Stats cards
+        const grid = document.getElementById('stats-grid');
+        grid.innerHTML = [
+            { v: stats.games_played, l: 'Spiele gespielt' },
+            { v: stats.games_completed, l: 'Durchgespielt' },
+            { v: stats.games_over, l: 'Game Over' },
+            { v: stats.total_questions_asked, l: 'Fragen gestellt' },
+            { v: stats.agreement_rate + '%', l: 'Einigungsrate' },
+            { v: stats.total_timeouts, l: 'Timeouts' },
+        ].map(s => `<div class="stat-card"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('');
+
+        // Controversial questions
+        const ctb = document.querySelector('#controversial-table tbody');
+        if (stats.controversial_questions.length === 0) {
+            ctb.innerHTML = '<tr><td colspan="3" style="color:#666">Noch keine Daten</td></tr>';
+        } else {
+            ctb.innerHTML = stats.controversial_questions.map(q =>
+                `<tr><td>${q.text}</td><td><span class="bar" style="width:${q.rate}px"></span>${q.rate}%</td><td>${q.asked}x</td></tr>`
+            ).join('');
+        }
+
+        // Recent sessions
+        const stb = document.querySelector('#sessions-table tbody');
+        if (stats.recent_sessions.length === 0) {
+            stb.innerHTML = '<tr><td colspan="4" style="color:#666">Noch keine Spiele</td></tr>';
+        } else {
+            stb.innerHTML = stats.recent_sessions.map(s => {
+                const d = new Date(s.timestamp);
+                const time = d.toLocaleDateString('de') + ' ' + d.toLocaleTimeString('de', {hour:'2-digit', minute:'2-digit'});
+                const result = s.completed ? '<span style="color:#4ecca3">Geschafft</span>' : '<span style="color:#e94560">Game Over</span>';
+                return `<tr><td>${time}</td><td>${s.score}/${s.total}</td><td>${s.category}</td><td>${result}</td></tr>`;
+            }).join('');
+        }
+    });
+}
+
+function resetStats() {
+    if (!confirm('Statistiken wirklich zurücksetzen?')) return;
+    fetch('/api/stats/reset', { method: 'POST' }).then(() => loadStats());
+}
+
+loadConfig();
+loadStats();
+</script>
 </body>
 </html>

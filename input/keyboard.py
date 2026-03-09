@@ -1,14 +1,19 @@
+import config
 from game.models import Vote
 from input.base import InputHandler
 
-KEY_MAP: dict[str, tuple[int, Vote]] = {
-    "1": (1, Vote.JA),
-    "2": (1, Vote.NEIN),
-    "9": (2, Vote.JA),
-    "0": (2, Vote.NEIN),
-}
+VOTE_MAP = {"ja": Vote.JA, "nein": Vote.NEIN}
 
 
 class KeyboardInputHandler(InputHandler):
     def parse(self, raw_input: str) -> tuple[int, Vote] | None:
-        return KEY_MAP.get(raw_input)
+        mapping = config.key_map()
+        result = mapping.get(raw_input)
+        if result is None:
+            return None
+        player_id, vote_str = result
+        return player_id, VOTE_MAP[vote_str]
+
+    def valid_keys(self) -> list[str]:
+        """Return list of all configured key strings."""
+        return list(config.key_map().keys())

@@ -1,0 +1,18 @@
+{
+  "keys": {
+    "player1_ja": "1",
+    "player1_nein": "2",
+    "player2_ja": "8",
+    "player2_nein": "9"
+  },
+  "timers": {
+    "voting_seconds": 10,
+    "debate_seconds": 120,
+    "transition_seconds": 10,
+    "questions_per_game": 5
+  },
+  "server": {
+    "port": 5001,
+    "debug": true
+  }
+}

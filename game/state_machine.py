@@ -5,6 +5,7 @@ from typing import Callable
 import config
 from game.models import GamePhase, GameSession, Vote
 from game.question_loader import load
+from game import stats
 
 
 class GameStateMachine:
@@ -19,6 +20,8 @@ class GameStateMachine:
         self._timer: threading.Timer | None = None
         self._timer_lock = threading.Lock()
         self._tick_interval = 1.0
+        self._category: str | None = None
+        self._transition_reason: str = "start"  # "start", "agreement", "timeout"
 
     def start_game(self, category: str | None = None):
         """Load questions and begin the first voting round."""
@@ -27,8 +30,12 @@ class GameStateMachine:
         if not questions:
             return
         random.shuffle(questions)
+        n = config.questions_per_game()
+        questions = questions[:n]
+        self._category = category
         self.session = GameSession(questions=questions)
-        self._enter_voting()
+        stats.record_game_start()
+        self._enter_transition()
 
     def register_vote(self, player_id: int, vote: Vote):
         """Register a player's vote. Evaluate when both have voted."""
@@ -90,6 +97,7 @@ class GameStateMachine:
             "players": players,
             "timer_remaining": round(session.timer_remaining),
             "timer_total": self._current_timer_total(),
+            "transition_reason": self._transition_reason,
         }
 
     # --- Internal methods ---
@@ -100,21 +108,43 @@ class GameStateMachine:
                 return p
         return None
 
+    def _current_question_text(self) -> str:
+        q = self.session.current_question
+        return q.text if q else ""
+
+    def _enter_transition(self, reason: str = "start"):
+        """Show Konsensomat transition before next question."""
+        self._transition_reason = reason
+        self.session.phase = GamePhase.TRANSITION
+        tt = config.transition_time()
+        self.session.timer_remaining = tt
+        self._broadcast()
+        self._start_countdown(tt, self._on_transition_done)
+
+    def _on_transition_done(self):
+        """Transition finished — enter voting."""
+        if self.session.phase != GamePhase.TRANSITION:
+            return
+        self._enter_voting()
+
     def _enter_voting(self):
         """Start voting phase with countdown."""
         self.session.phase = GamePhase.VOTING
         self.session.reset_votes()
-        self.session.timer_remaining = config.VOTING_TIME
+        vt = config.voting_time()
+        self.session.timer_remaining = vt
         self._broadcast()
-        self._start_countdown(config.VOTING_TIME, self._on_voting_timeout)
+        stats.record_question_asked(self._current_question_text())
+        self._start_countdown(vt, self._on_voting_timeout)
 
     def _enter_debate(self):
-        """Start debate phase with 120s countdown."""
+        """Start debate phase with countdown."""
         self.session.phase = GamePhase.DEBATE
         self.session.reset_votes()
-        self.session.timer_remaining = config.DEBATE_TIME
+        dt = config.debate_time()
+        self.session.timer_remaining = dt
         self._broadcast()
-        self._start_countdown(config.DEBATE_TIME, self._on_debate_timeout)
+        self._start_countdown(dt, self._on_debate_timeout)
 
     def _evaluate_votes(self):
         """Check if votes match and transition accordingly."""
@@ -126,11 +156,12 @@ class GameStateMachine:
     def _on_agreement(self):
         """Votes match — score point and advance."""
         self.session.score += 1
+        stats.record_agreement(self._current_question_text())
         if self.session.has_more_questions():
             self.session.next_question()
             if self.session.phase == GamePhase.DEBATE:
                 self._cancel_timer()
-            self._enter_voting()
+            self._enter_transition("agreement")
         else:
             self._enter_score_screen()
 
@@ -139,6 +170,7 @@ class GameStateMachine:
         if self.session.phase == GamePhase.VOTING:
             # First disagreement — enter debate
             self._cancel_timer()
+            stats.record_disagreement(self._current_question_text())
             self._enter_debate()
         elif self.session.phase == GamePhase.DEBATE:
             # Still disagree during debate — reset votes, timer keeps running
@@ -149,9 +181,10 @@ class GameStateMachine:
         """Voting time expired — skip to next question or end."""
         if self.session.phase != GamePhase.VOTING:
             return
+        stats.record_timeout(self._current_question_text())
         if self.session.has_more_questions():
             self.session.next_question()
-            self._enter_voting()
+            self._enter_transition("timeout")
         else:
             self._enter_score_screen()
 
@@ -162,6 +195,10 @@ class GameStateMachine:
         self.session.phase = GamePhase.GAME_OVER
         self.session.timer_remaining = 0
         self._broadcast()
+        stats.record_game_end(
+            self.session.score, len(self.session.questions),
+            self._category, completed=False,
+        )
 
     def _enter_score_screen(self):
         """All questions done — show final score."""
@@ -169,12 +206,18 @@ class GameStateMachine:
         self.session.phase = GamePhase.SCORE_SCREEN
         self.session.timer_remaining = 0
         self._broadcast()
+        stats.record_game_end(
+            self.session.score, len(self.session.questions),
+            self._category, completed=True,
+        )
 
     def _current_timer_total(self) -> int:
-        if self.session.phase == GamePhase.VOTING:
-            return config.VOTING_TIME
+        if self.session.phase == GamePhase.TRANSITION:
+            return config.transition_time()
+        elif self.session.phase == GamePhase.VOTING:
+            return config.voting_time()
         elif self.session.phase == GamePhase.DEBATE:
-            return config.DEBATE_TIME
+            return config.debate_time()
         return 0
 
     # --- Timer management ---
@@ -184,24 +227,28 @@ class GameStateMachine:
         self._cancel_timer()
         self.session.timer_remaining = seconds
         self._countdown_target = on_expire
-        # Wait one second before first tick (so timer shows full value first)
         self._timer = threading.Timer(self._tick_interval, self._tick)
         self._timer.daemon = True
         self._timer.start()
 
     def _tick(self):
         """Decrement timer and schedule next tick or fire expiry."""
+        expired_target = None
         with self._timer_lock:
             self.session.timer_remaining -= self._tick_interval
             if self.session.timer_remaining <= 0:
                 self.session.timer_remaining = 0
                 self._broadcast()
-                self._countdown_target()
-                return
-            self._broadcast()
-            self._timer = threading.Timer(self._tick_interval, self._tick)
-            self._timer.daemon = True
-            self._timer.start()
+                # Don't call target inside lock — would deadlock on _cancel_timer
+                expired_target = self._countdown_target
+            else:
+                self._broadcast()
+                self._timer = threading.Timer(self._tick_interval, self._tick)
+                self._timer.daemon = True
+                self._timer.start()
+        # Call expiry handler outside lock
+        if expired_target:
+            expired_target()
 
     def _cancel_timer(self):
         with self._timer_lock:

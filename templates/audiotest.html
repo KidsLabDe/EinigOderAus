@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Test</title>
+    <style>
+        body { background: #1a1a2e; color: #eee; font-family: sans-serif; padding: 2em; }
+        button { font-size: 1.5em; padding: 0.5em 1.5em; margin: 0.5em; cursor: pointer; border: none; border-radius: 0.3em; }
+        .green { background: #4ecca3; }
+        .red { background: #e94560; color: #fff; }
+        .orange { background: #e9a545; }
+        #log { margin-top: 1em; font-family: monospace; font-size: 0.9em; color: #aaa; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Audio Test</h1>
+    <p>Klicke zuerst einen Button (Browser braucht User-Interaktion fuer Audio):</p>
+
+    <button class="green" onclick="testPlay('agreement')">Agreement</button>
+    <button class="red" onclick="testPlay('buzzer')">Buzzer</button>
+    <button class="orange" onclick="testPlay('alarm')">Alarm</button>
+    <button class="green" onclick="testPlay('score')">Score</button>
+    <button class="orange" onclick="testPlay('transition')">Transition</button>
+    <button class="green" onclick="testPlay('voting')">Voting</button>
+    <button class="orange" onclick="testPlay('tick')">Tick</button>
+    <button class="red" onclick="testPlay('stomp')">Stomp</button>
+    <button class="green" onclick="testPlay('start')">Start</button>
+
+    <br><br>
+    <button onclick="testDirect()">Direct Audio() Test</button>
+    <button onclick="testFetch()">Fetch + Decode Test</button>
+
+    <div id="log"></div>
+
+<script>
+const log = document.getElementById('log');
+function addLog(msg) {
+    log.textContent += new Date().toLocaleTimeString() + ' ' + msg + '\n';
+}
+
+function testPlay(name) {
+    addLog('Playing ' + name + '...');
+    const audio = new Audio('/static/audio/' + name + '.mp3');
+    audio.addEventListener('canplaythrough', () => addLog(name + ': canplaythrough'));
+    audio.addEventListener('playing', () => addLog(name + ': PLAYING'));
+    audio.addEventListener('error', (e) => addLog(name + ' ERROR: ' + audio.error?.message));
+    audio.addEventListener('ended', () => addLog(name + ': ended'));
+    audio.play()
+        .then(() => addLog(name + ': play() promise resolved'))
+        .catch(err => addLog(name + ' play() REJECTED: ' + err.message));
+}
+
+function testDirect() {
+    addLog('Direct fetch test...');
+    fetch('/static/audio/agreement.mp3')
+        .then(r => {
+            addLog('Fetch status: ' + r.status + ', type: ' + r.headers.get('content-type') + ', size: ' + r.headers.get('content-length'));
+            return r.arrayBuffer();
+        })
+        .then(buf => {
+            addLog('ArrayBuffer size: ' + buf.byteLength + ' bytes');
+            const ctx = new AudioContext();
+            return ctx.decodeAudioData(buf);
+        })
+        .then(decoded => {
+            addLog('Decoded: ' + decoded.duration.toFixed(1) + 's, ' + decoded.numberOfChannels + 'ch, ' + decoded.sampleRate + 'Hz');
+        })
+        .catch(err => addLog('Direct test ERROR: ' + err.message));
+}
+
+function testFetch() {
+    addLog('Checking all audio URLs...');
+    ['agreement', 'buzzer', 'alarm'].forEach(name => {
+        fetch('/static/audio/' + name + '.mp3', { method: 'HEAD' })
+            .then(r => addLog(name + '.mp3: ' + r.status + ' (' + r.headers.get('content-length') + ' bytes)'))
+            .catch(err => addLog(name + '.mp3 FETCH ERROR: ' + err.message));
+    });
+}
+</script>
+</body>
+</html>

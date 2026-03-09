@@ -1,6 +1,6 @@
 /**
  * CutoutAnimator — Gilliam-style paper cutout animation engine
- * Uses GSAP with stepped easing for stop-motion look
+ * Uses GSAP for smooth animations with subtle stop-motion character
  */
 const CutoutAnimator = {
     _layer: null,
@@ -27,7 +27,6 @@ const CutoutAnimator = {
         const img = document.createElement('img');
         img.src = src;
         img.draggable = false;
-        // Apply initial positioning
         if (props.width) img.style.width = props.width + 'px';
         if (props.height) img.style.height = props.height + 'px';
         gsap.set(img, {
@@ -66,66 +65,61 @@ const CutoutAnimator = {
 
     // --- Gilliam Primitives ---
 
-    /** Stepped easing for stop-motion feel */
-    steppedEase(steps) {
-        return 'steps(' + steps + ')';
-    },
-
-    /** Subtle rotation wobble — paper cutout feel */
-    addWobble(el, intensity = 2) {
+    /** Subtle rotation wobble — gentle paper cutout feel */
+    addWobble(el, intensity = 1.5) {
         const tl = gsap.timeline({ repeat: -1, yoyo: true });
         tl.to(el, {
             rotation: intensity,
-            duration: 0.3,
-            ease: 'steps(4)',
+            duration: 0.8 + Math.random() * 0.4,
+            ease: 'sine.inOut',
         });
         tl.to(el, {
             rotation: -intensity,
-            duration: 0.3,
-            ease: 'steps(4)',
+            duration: 0.8 + Math.random() * 0.4,
+            ease: 'sine.inOut',
         });
         this.track(tl);
         return tl;
     },
 
-    /** Jerky slide in from offscreen */
+    /** Smooth slide in from offscreen */
     slideIn(el, from, toProps = {}) {
         const startProps = {};
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        if (from === 'left') startProps.x = -400;
+        if (from === 'left') startProps.x = -500;
         else if (from === 'right') startProps.x = vw + 100;
-        else if (from === 'top') startProps.y = -400;
+        else if (from === 'top') startProps.y = -500;
         else if (from === 'bottom') startProps.y = vh + 100;
 
         gsap.set(el, startProps);
         const tl = gsap.timeline();
         tl.to(el, {
             ...toProps,
-            duration: toProps.duration || 0.6,
-            ease: 'steps(8)',
+            duration: toProps.duration || 0.8,
+            ease: 'power2.out',
         });
         this.track(tl);
         return tl;
     },
 
-    /** Jerky slide out to offscreen */
-    slideOut(el, to, duration = 0.4) {
+    /** Smooth slide out to offscreen */
+    slideOut(el, to, duration = 0.6) {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         const target = {};
 
-        if (to === 'left') target.x = -400;
+        if (to === 'left') target.x = -500;
         else if (to === 'right') target.x = vw + 100;
-        else if (to === 'top') target.y = -400;
+        else if (to === 'top') target.y = -500;
         else if (to === 'bottom') target.y = vh + 100;
 
         const tl = gsap.timeline();
         tl.to(el, {
             ...target,
             duration: duration,
-            ease: 'steps(6)',
+            ease: 'power2.in',
             onComplete: () => this.despawn(el),
         });
         this.track(tl);
@@ -133,13 +127,13 @@ const CutoutAnimator = {
     },
 
     /** Hinge-point rotation (arms, jaw, limbs) */
-    hingeMotion(el, originX, originY, angle, duration = 0.5) {
+    hingeMotion(el, originX, originY, angle, duration = 0.6) {
         gsap.set(el, { transformOrigin: originX + ' ' + originY });
         const tl = gsap.timeline({ repeat: -1, yoyo: true });
         tl.to(el, {
             rotation: angle,
             duration: duration,
-            ease: 'steps(6)',
+            ease: 'sine.inOut',
         });
         this.track(tl);
         return tl;
@@ -150,15 +144,15 @@ const CutoutAnimator = {
         gsap.set(el, { scale: 0, opacity: 0 });
         const tl = gsap.timeline();
         tl.to(el, {
-            scale: 1.2,
+            scale: 1.15,
             opacity: 1,
-            duration: 0.15,
-            ease: 'steps(3)',
+            duration: 0.25,
+            ease: 'back.out(3)',
         });
         tl.to(el, {
             scale: 1,
-            duration: 0.1,
-            ease: 'steps(2)',
+            duration: 0.15,
+            ease: 'power2.out',
         });
         this.track(tl);
         return tl;
@@ -166,25 +160,27 @@ const CutoutAnimator = {
 
     /** Monty Python foot stomp from above */
     stompDown(el, targetY) {
-        gsap.set(el, { y: -500, scaleY: 1 });
+        gsap.set(el, { y: -800, scaleY: 1 });
         const tl = gsap.timeline();
+        // Fast drop
         tl.to(el, {
             y: targetY,
-            duration: 0.3,
-            ease: 'steps(4)',
+            duration: 0.25,
+            ease: 'power4.in',
         });
         // Squash on impact
         tl.to(el, {
-            scaleY: 0.7,
-            scaleX: 1.15,
-            duration: 0.08,
+            scaleY: 0.75,
+            scaleX: 1.12,
+            duration: 0.06,
             ease: 'none',
         });
+        // Bounce back
         tl.to(el, {
             scaleY: 1,
             scaleX: 1,
-            duration: 0.12,
-            ease: 'steps(2)',
+            duration: 0.2,
+            ease: 'elastic.out(1, 0.4)',
         });
         this.track(tl);
         return tl;
