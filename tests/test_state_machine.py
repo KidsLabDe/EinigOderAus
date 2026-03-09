@@ -58,7 +58,7 @@ def test_matching_votes_score_and_advance():
     m = make_machine()
     m.register_vote(1, Vote.JA)
     m.register_vote(2, Vote.JA)
-    assert m.session.score == 1
+    assert m.session.score == 10
     # After agreement, enters transition for next question
     _skip_transition_if_needed(m)
     assert m.session.phase == GamePhase.VOTING
@@ -80,10 +80,10 @@ def test_agreement_during_debate():
     m.register_vote(2, Vote.NEIN)
     assert m.session.phase == GamePhase.DEBATE
 
-    # Now agree during debate
+    # Now agree during debate — worth 100 points
     m.register_vote(1, Vote.JA)
     m.register_vote(2, Vote.JA)
-    assert m.session.score == 1
+    assert m.session.score == 100
     _skip_transition_if_needed(m)
     assert m.session.phase == GamePhase.VOTING
     assert m.session.current_question_index == 1
@@ -134,13 +134,13 @@ def test_all_questions_done_score_screen():
     # Answer first correctly
     m.register_vote(1, Vote.JA)
     m.register_vote(2, Vote.JA)
-    assert m.session.score == 1
+    assert m.session.score == 10
     _skip_transition_if_needed(m)
 
     # Answer second correctly
     m.register_vote(1, Vote.NEIN)
     m.register_vote(2, Vote.NEIN)
-    assert m.session.score == 2
+    assert m.session.score == 20
     assert m.session.phase == GamePhase.SCORE_SCREEN
 
 
@@ -174,7 +174,7 @@ def test_restart_game():
     m = make_machine()
     m.register_vote(1, Vote.JA)
     m.register_vote(2, Vote.JA)
-    assert m.session.score == 1
+    assert m.session.score == 10
 
     m.restart_game()
     assert m.session.phase == GamePhase.IDLE

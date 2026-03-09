@@ -154,8 +154,11 @@ class GameStateMachine:
             self._on_disagreement()
 
     def _on_agreement(self):
-        """Votes match — score point and advance."""
-        self.session.score += 1
+        """Votes match — score points. 10 for voting, 100 for debate consensus."""
+        if self.session.phase == GamePhase.DEBATE:
+            self.session.score += 100
+        else:
+            self.session.score += 10
         stats.record_agreement(self._current_question_text())
         if self.session.has_more_questions():
             self.session.next_question()

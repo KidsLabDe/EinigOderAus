@@ -28,6 +28,8 @@ const AnimationScenes = {
             this._img('objects/pendel.png'),
             this._img('objects/zahnrad.png'),
             this._img('objects/steam.png'),
+            this._img('objects/bulb_off.png'),
+            this._img('objects/bulb_on.png'),
             this._img('objects/gameover.png'),
             this._img('decorative/curtain-left.png'),
             this._img('decorative/curtain-right.png'),
@@ -191,8 +193,49 @@ const AnimationScenes = {
         }, 0.5);
         CutoutAnimator.track(enterTl);
 
+        // --- Bulbs: 3 off, then switch on left to right ---
+        const bulbNatPositions = [
+            { x: 300, y: 475 },
+            { x: 375, y: 475 },
+            { x: 450, y: 475 },
+        ];
+        const bulbDisplayH = 180 * scale;
+        const bulbTargets = bulbNatPositions.map(pos => ({
+            x: machineX + pos.x * scale - bulbDisplayH / 2,
+            y: machineY + pos.y * scale - bulbDisplayH / 2,
+        }));
+        const bulbs = bulbTargets.map(target => {
+            return CutoutAnimator.spawn(this._img('objects/bulb_off.png'), {
+                x: target.x, y: target.y,
+                height: bulbDisplayH,
+                opacity: 0,
+            });
+        });
+
+        // Fade bulbs in with machine
+        enterTl.to(bulbs, { opacity: 1, duration: 0.5 }, 1.0);
+
+        // Track all bulb elements for exit animation
+        const allBulbEls = [...bulbs];
+
         // === RUNNING ===
         const runDelay = 1.6;
+
+        // Switch bulbs on one by one (evenly spread across the transition)
+        const bulbInterval = (duration - 4) / 3;
+        bulbs.forEach((bulb, i) => {
+            setTimeout(() => {
+                const target = bulbTargets[i];
+                const onBulb = CutoutAnimator.spawn(this._img('objects/bulb_on.png'), {
+                    x: target.x, y: target.y,
+                    height: bulbDisplayH,
+                    opacity: 0,
+                });
+                allBulbEls.push(onBulb);
+                gsap.to(onBulb, { opacity: 1, duration: 0.3 });
+                gsap.to(bulb, { opacity: 0, duration: 0.3 });
+            }, (runDelay + i * bulbInterval) * 1000);
+        });
 
         // Pendel — smooth swing
         const pendelSwing = gsap.timeline({ repeat: -1, yoyo: true, delay: runDelay });
@@ -222,6 +265,23 @@ const AnimationScenes = {
             exitTl.to(machine, { x: vw + 100, duration: 1.2, ease: 'power2.in' }, 0);
             exitTl.to(pendel, { x: vw + 200, y: -pendelDisplayH, duration: 0.9, ease: 'power2.in' }, 0.1);
             exitTl.to(zahnrad, { x: vw + 200, y: vh + 100, duration: 0.9, ease: 'power2.in' }, 0.2);
+
+            // Bulbs fly out wildly spinning in random directions
+            allBulbEls.forEach((bulb, i) => {
+                const angle = Math.random() * 360;
+                const dist = vw * 0.5 + Math.random() * vw * 0.5;
+                const targetX = parseFloat(gsap.getProperty(bulb, 'x')) + Math.cos(angle * Math.PI / 180) * dist;
+                const targetY = parseFloat(gsap.getProperty(bulb, 'y')) + Math.sin(angle * Math.PI / 180) * dist;
+                const spin = (Math.random() > 0.5 ? 1 : -1) * (720 + Math.random() * 1080);
+                exitTl.to(bulb, {
+                    x: targetX, y: targetY,
+                    rotation: spin,
+                    opacity: 0,
+                    duration: 0.8 + Math.random() * 0.4,
+                    ease: 'power2.in',
+                }, i * 0.1);
+            });
+
             CutoutAnimator.track(exitTl);
         }, Math.max(exitTime, 3000));
     },
@@ -308,9 +368,9 @@ const AnimationScenes = {
         CutoutAnimator.slideIn(figR, 'right', { x: vw - 270, duration: 0.4 });
 
         const gavel = CutoutAnimator.spawn(this._img('objects/gavel.png'), {
-            width: 120, x: vw / 2 - 60,
+            width: 360, x: vw / 2 - 180,
         });
-        CutoutAnimator.stompDown(gavel, vh / 2 - 60);
+        CutoutAnimator.stompDown(gavel, vh - 500);
 
         setTimeout(() => {
             CutoutAnimator.addWobble(figL, 2);
