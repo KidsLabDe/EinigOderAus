@@ -5,92 +5,58 @@ let categoriesLoaded = false;
 let debateUrgentTriggered = false;
 let tickStarted = false;
 
-// Key order for category mapping: P1-Ja, P1-Nein, P2-Ja, P2-Nein
-let keyOrder = ['1', '2', '8', '9'];
-// Map: key -> action ({type:'category', value:...} or {type:'nav', value:'next'/'back'})
-let keyCategoryMap = {};
+// Green keys (Ja) = select, Red keys (Nein) = next
+let greenKeys = ['1', '8'];
+let redKeys = ['2', '9'];
 let allCategories = [];
-let categoryPage = 0;
-const CATS_PER_PAGE = 3;
+let focusedIndex = 0; // currently highlighted category
 
 // Load key config
 fetch('/api/config')
     .then(r => r.json())
     .then(cfg => {
         const k = cfg.keys;
-        keyOrder = [k.player1_ja, k.player1_nein, k.player2_ja, k.player2_nein];
+        greenKeys = [k.player1_ja, k.player2_ja];
+        redKeys = [k.player1_nein, k.player2_nein];
     })
     .catch(() => {});
 
-// --- Load categories and build paginated key mapping ---
+// --- Load categories and build list ---
 function loadCategories() {
     fetch('/api/categories')
         .then(r => r.json())
         .then(categories => {
-            allCategories = categories;
-            categoryPage = 0;
-            buildCategoryPage();
+            allCategories = categories.concat([null]); // null = "Alle Kategorien"
+            focusedIndex = 0;
+            buildCategoryList();
             categoriesLoaded = true;
         });
 }
 
-function buildCategoryPage() {
+function buildCategoryList() {
     const grid = document.getElementById('category-grid');
     grid.innerHTML = '';
-    keyCategoryMap = {};
 
-    const slots = keyOrder.slice(0, 4);
-    const totalPages = Math.ceil(allCategories.length / CATS_PER_PAGE);
-    const isLastPage = categoryPage >= totalPages - 1;
-    const startIdx = categoryPage * CATS_PER_PAGE;
-    const pageCats = allCategories.slice(startIdx, startIdx + CATS_PER_PAGE);
-
-    const items = [];
-
-    // Slots 0-2 (keys 1, 2, 8): categories for this page
-    for (let i = 0; i < CATS_PER_PAGE; i++) {
-        if (i < pageCats.length) {
-            items.push({ key: slots[i], label: pageCats[i], action: { type: 'category', value: pageCats[i] } });
-        }
-    }
-
-    // Fill remaining slots with "Alle" and navigation
-    if (isLastPage && totalPages > 1) {
-        // Last page of multi-page: "Alle" on next free slot, "Zurück" on key 9
-        const alleSlot = slots[pageCats.length < CATS_PER_PAGE ? pageCats.length : 2];
-        // If page is full, replace last category slot with Alle
-        if (pageCats.length >= CATS_PER_PAGE) items.pop();
-        items.push({ key: alleSlot, label: 'Alle Kategorien', action: { type: 'category', value: null } });
-        items.push({ key: slots[3], label: '\u25C0 Zurück', action: { type: 'nav', value: 'back' } });
-    } else if (isLastPage) {
-        // Single page: just "Alle" on key 9
-        items.push({ key: slots[3], label: 'Alle Kategorien', action: { type: 'category', value: null } });
-    } else {
-        // Not last page: "Weiter" on key 9
-        items.push({ key: slots[3], label: 'Weiter \u25B6', action: { type: 'nav', value: 'next' } });
-    }
-
-    // Build key map
-    items.forEach(item => {
-        keyCategoryMap[item.key] = item.action;
-    });
-
-    // Render grid
-    items.forEach(item => {
+    allCategories.forEach((cat, i) => {
         const el = document.createElement('div');
-        el.className = 'category-option';
-        if (item.action.type === 'nav') el.className += ' nav-option';
-        el.innerHTML = `<span class="category-key">${item.key}</span><span class="category-label">${item.label}</span>`;
+        el.className = 'category-option' + (i === focusedIndex ? ' focused' : '');
+        const label = cat || 'Alle Kategorien';
+        el.innerHTML = `<span class="category-label">${label}</span>`;
         grid.appendChild(el);
     });
+}
 
-    // Page indicator
-    if (totalPages > 1) {
-        const indicator = document.createElement('div');
-        indicator.className = 'page-indicator';
-        indicator.textContent = `Seite ${categoryPage + 1}/${totalPages}`;
-        grid.appendChild(indicator);
+function focusNext() {
+    focusedIndex = (focusedIndex + 1) % allCategories.length;
+    buildCategoryList();
+}
+
+function selectFocused() {
+    const options = document.querySelectorAll('.category-option');
+    if (options[focusedIndex]) {
+        options[focusedIndex].classList.add('selected');
     }
+    startGame(allCategories[focusedIndex]);
 }
 
 function startGame(category) {
@@ -146,25 +112,10 @@ function startTutorial() {
 // --- Menu action from server (button press on idle) ---
 socket.on('menu_action', (data) => {
     if (data.action === 'select' && data.key) {
-        const action = keyCategoryMap[data.key];
-        if (!action) return;
-
-        if (action.type === 'nav') {
-            if (action.value === 'next') {
-                categoryPage++;
-            } else {
-                categoryPage = 0;
-            }
-            buildCategoryPage();
-        } else if (action.type === 'category') {
-            const options = document.querySelectorAll('.category-option');
-            options.forEach(opt => {
-                const keyLabel = opt.querySelector('.category-key');
-                if (keyLabel && keyLabel.textContent === data.key) {
-                    opt.classList.add('selected');
-                }
-            });
-            startGame(action.value);
+        if (redKeys.includes(data.key)) {
+            focusNext();
+        } else if (greenKeys.includes(data.key)) {
+            selectFocused();
         }
     }
 });
@@ -236,9 +187,6 @@ socket.on('game_state', (state) => {
     // Load categories when idle
     if (phase === 'idle') {
         loadCategories();
-        document.querySelectorAll('.category-option.selected').forEach(
-            el => el.classList.remove('selected')
-        );
     }
 
     showScreen(phase);

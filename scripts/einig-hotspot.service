@@ -1,5 +1,5 @@
 [Unit]
-Description=Einig oder Aus! — Fallback WiFi Hotspot
+Description=Konsensomat — Fallback WiFi Hotspot
 After=NetworkManager-wait-online.service
 Wants=NetworkManager-wait-online.service
 

@@ -1,7 +1,7 @@
 [project]
-name = "einig-oder-aus"
+name = "konsensomat"
 version = "0.1.0"
-description = "Einig oder Aus! — Die Demokratiemaschine"
+description = "Konsensomat — Die Demokratiemaschine"
 requires-python = ">=3.11"
 dependencies = [
     "flask>=3.0",

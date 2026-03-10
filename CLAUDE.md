@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Einig oder Aus! — Die Demokratiemaschine** is an interactive physical installation by KidsLab gGmbH (Augsburg). Two players stand at opposing voting stations and answer yes/no questions. If they agree, they score a point. If they disagree, a 2-minute debate timer starts — they must reach consensus or the game ends.
+**Konsensomat — Die Demokratiemaschine** is an interactive physical installation by KidsLab gGmbH (Augsburg). Two players stand at opposing voting stations and answer yes/no questions. If they agree, they score a point. If they disagree, a 2-minute debate timer starts — they must reach consensus or the game ends.
 
 Inspired by Adam J. Scarborough's "The Democracy Machine!", targeted at ages 10+.
 

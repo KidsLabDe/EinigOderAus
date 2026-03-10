@@ -1,5 +1,5 @@
 [Unit]
-Description=Einig oder Aus! — Die Demokratiemaschine
+Description=Konsensomat — Die Demokratiemaschine
 After=network.target
 
 [Service]

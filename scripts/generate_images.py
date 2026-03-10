@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run
 """
-Generiert alle Cutout-Bilder für "Einig oder Aus!" via OpenAI DALL-E API.
+Generiert alle Cutout-Bilder für "Konsensomat" via OpenAI DALL-E API.
 
 Usage:
     export OPENAI_API_KEY="sk-..."

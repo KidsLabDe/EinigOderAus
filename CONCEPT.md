@@ -1,4 +1,4 @@
-# Einig oder Aus! — Die Demokratiemaschine
+# Konsensomat — Die Demokratiemaschine
 
 ## Technisches Konzept (v0.1)
 

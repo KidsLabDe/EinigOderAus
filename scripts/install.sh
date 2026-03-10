@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Einig oder Aus! — Raspberry Pi Kiosk-Installation
+# Konsensomat — Raspberry Pi Kiosk-Installation
 # Einmal auf dem Pi ausführen: bash scripts/install.sh
 set -euo pipefail
 
@@ -7,7 +7,7 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SERVICE_NAME="einig-oder-aus"
 CURRENT_USER="$(whoami)"
 
-echo "=== Einig oder Aus! — Installation ==="
+echo "=== Konsensomat — Installation ==="
 echo "Repo:  $REPO_DIR"
 echo "User:  $CURRENT_USER"
 echo ""

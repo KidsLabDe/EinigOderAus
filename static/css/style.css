@@ -63,16 +63,16 @@ html, body {
 
 /* --- Idle screen --- */
 #screen-idle h1 {
-    font-size: 4em;
+    font-size: 8em;
     font-weight: 900;
     margin-bottom: 0.1em;
     color: #e94560;
 }
 
 .subtitle {
-    font-size: 1.5em;
+    font-size: 3em;
     color: #aaa;
-    margin-bottom: 1.5em;
+    margin-bottom: 1em;
 }
 
 .category-select {
@@ -144,9 +144,9 @@ html, body {
 /* --- Tutorial steps --- */
 .tutorial {
     position: relative;
-    height: 5em;
+    height: 6em;
     width: 100%;
-    max-width: 700px;
+    max-width: 900px;
     margin-bottom: 1.5em;
     overflow: hidden;
 }
@@ -170,81 +170,82 @@ html, body {
 }
 
 .tutorial-icon {
-    font-size: 3.5em;
+    font-size: 4em;
 }
 
 .tutorial-text {
-    font-size: 2em;
+    font-size: 3em;
     color: #ccc;
     text-align: left;
 }
 
-/* --- Category grid (idle screen) --- */
+/* --- Category list (idle screen) --- */
 .category-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1em;
-    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    max-width: 700px;
     width: 100%;
     margin-bottom: 1em;
+    max-height: 40vh;
+    overflow-y: auto;
 }
 
 .category-option {
     display: flex;
     align-items: center;
-    gap: 0.8em;
+    justify-content: center;
     background: #16213e;
-    border: 2px solid #0f3460;
+    border: 2px solid transparent;
     border-radius: 0.5em;
-    padding: 0.8em 1.2em;
-    transition: border-color 0.2s, background 0.2s;
+    padding: 0.6em 1.5em;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.category-option.focused {
+    border-color: #4ecca3;
+    background: #0f3460;
+    transform: scale(1.05);
 }
 
 .category-option.selected {
     border-color: #4ecca3;
-    background: #0f3460;
+    background: #4ecca3;
 }
 
-.category-key {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.2em;
-    height: 2.2em;
-    background: #e94560;
-    color: #fff;
-    font-size: 1.3em;
-    font-weight: 900;
-    border-radius: 0.3em;
-    flex-shrink: 0;
+.category-option.selected .category-label {
+    color: #1a1a2e;
 }
 
 .category-label {
-    font-size: 1.2em;
+    font-size: 1.6em;
     font-weight: 600;
     color: #eee;
 }
 
-.category-option.nav-option {
-    background: #0f3460;
-    border-color: #4ecca3;
+.category-option:not(.focused) .category-label {
+    color: #888;
 }
 
-.category-option.nav-option .category-key {
-    background: #4ecca3;
-    color: #1a1a2e;
+/* --- Selection hint --- */
+.selection-hint {
+    display: flex;
+    gap: 2em;
+    margin-top: 1em;
+    font-size: 1.8em;
+    font-weight: 700;
 }
 
-.page-indicator {
-    grid-column: 1 / -1;
-    text-align: center;
-    font-size: 1em;
-    color: #666;
-    margin-top: 0.3em;
+.hint-red {
+    color: #e94560;
 }
 
-/* --- Start / Restart prompt --- */
-.start-prompt, .restart-hint {
+.hint-green {
+    color: #4ecca3;
+}
+
+/* --- Restart prompt --- */
+.restart-hint {
     font-size: 1.5em;
     font-weight: 700;
     color: #4ecca3;

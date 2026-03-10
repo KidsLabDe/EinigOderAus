@@ -2,9 +2,9 @@
 # Fallback-Hotspot: Wenn kein WLAN verbunden, Hotspot aufmachen
 set -euo pipefail
 
-HOTSPOT_SSID="EinigOderAus"
+HOTSPOT_SSID="Konsensomat"
 HOTSPOT_PASS="kidslab"
-HOTSPOT_CON="EinigOderAus-Hotspot"
+HOTSPOT_CON="Konsensomat-Hotspot"
 WIFI_DEVICE="wlan0"
 MAX_WAIT=5
 

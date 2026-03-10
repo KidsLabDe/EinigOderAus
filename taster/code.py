@@ -1,5 +1,5 @@
 """
-Einig oder Aus! - Taster-Controller
+Konsensomat - Taster-Controller
 Raspberry Pi Pico mit CircuitPython
 
 Hardware:
@@ -138,7 +138,7 @@ def handle_press(name, keycode, result_col):
 set_button_leds(True)
 
 print("========================================")
-print("Einig oder Aus! - Taster-Controller")
+print("Konsensomat - Taster-Controller")
 print(f"  NeoPixel: {NEOPIXEL_COUNT} Pixel an GP22")
 print(f"  Taster links: GP21, LED: GP20")
 print(f"  Taster rechts: GP19, LED: GP18")

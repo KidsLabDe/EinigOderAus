@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Einig oder Aus!</title>
+    <title>Konsensomat</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 
 <!-- IDLE SCREEN -->
 <div id="screen-idle" class="screen active">
-    <h1>Einig oder Aus!</h1>
+    <h1>Konsensomat</h1>
     <p class="subtitle">Die Demokratiemaschine</p>
 
     <div class="tutorial">
@@ -33,7 +33,10 @@
     </div>
 
     <div class="category-grid" id="category-grid"></div>
-    <div class="start-prompt pulse-text">W&auml;hlt eine Kategorie!</div>
+    <div class="selection-hint">
+        <span class="hint-red">ROT = Weiter</span>
+        <span class="hint-green">GR&Uuml;N = Ausw&auml;hlen</span>
+    </div>
 </div>
 
 <!-- TRANSITION SCREEN (Konsensomat) -->
@@ -76,7 +79,7 @@
     <div class="debate-label">DEBATTE!</div>
     <div class="question-text" id="debate-question-text"></div>
     <div class="debate-timer" id="debate-timer">120</div>
-    <div class="debate-hint">Diskutiert und stimmt erneut ab!</div>
+    <div class="debate-hint">Ihr habt jetzt 2 Minuten f&uuml;r eine Diskussion &mdash; Einigt euch, oder Game Over!</div>
     <div class="vote-status">
         <div class="player-vote" id="debate-p1-vote">
             <span class="player-name">Spieler 1</span>
