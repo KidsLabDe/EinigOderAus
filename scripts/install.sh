@@ -15,7 +15,7 @@ echo ""
 # --- System-Pakete ---
 echo "→ System-Pakete installieren ..."
 sudo apt-get update -qq
-sudo apt-get install -y -qq chromium-browser wtype curl
+sudo apt-get install -y -qq wtype curl
 
 # --- uv installieren ---
 if ! command -v uv &>/dev/null; then
@@ -54,6 +54,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable "${SERVICE_NAME}@${CURRENT_USER}.service"
 sudo systemctl start "${SERVICE_NAME}@${CURRENT_USER}.service" || true
 echo "  Service: ${SERVICE_NAME}@${CURRENT_USER}"
+
+# --- Hotspot-Service ---
+echo "→ Fallback-Hotspot-Service installieren ..."
+HOTSPOT_SERVICE="/etc/systemd/system/einig-hotspot@.service"
+sudo cp "$REPO_DIR/scripts/einig-hotspot.service" "$HOTSPOT_SERVICE"
+chmod +x "$REPO_DIR/scripts/hotspot.sh"
+sudo systemctl daemon-reload
+sudo systemctl enable "einig-hotspot@${CURRENT_USER}.service"
+echo "  Hotspot-Service aktiviert (startet bei fehlendem WLAN)"
 
 # --- kiosk.sh ausführbar machen ---
 chmod +x "$REPO_DIR/scripts/kiosk.sh"

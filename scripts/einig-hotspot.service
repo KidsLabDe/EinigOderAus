@@ -1,0 +1,13 @@
+[Unit]
+Description=Einig oder Aus! — Fallback WiFi Hotspot
+After=NetworkManager-wait-online.service
+Wants=NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=%I
+ExecStart=/home/%I/src/EinigOderAus/scripts/hotspot.sh
+
+[Install]
+WantedBy=multi-user.target

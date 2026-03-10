@@ -17,7 +17,7 @@ until curl --silent --fail --output /dev/null "$URL"; do
 done
 echo "Server erreichbar nach ${waited}s."
 
-exec chromium-browser \
+exec chromium \
     --kiosk \
     --noerrdialogs \
     --disable-infobars \

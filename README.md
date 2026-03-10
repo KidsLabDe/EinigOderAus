@@ -16,8 +16,200 @@ Die interaktive Installation von KidsLab ist inspiriert von Adam J. Scarboroughs
 
 ---
 
-### Für Schulveranstaltungen 
+### Für Schulveranstaltungen
 
 Was bedeutet es, sich zu einigen? Und was passiert, wenn man es nicht schafft? **Einig oder Aus! — Die Demokratiemaschine** ist eine spielerische Installation, bei der Schülerinnen und Schüler demokratische Grundprinzipien am eigenen Leib erleben: Abstimmen, Diskutieren, Überzeugen — und manchmal auch Nachgeben. In kurzen Spielrunden à zwei Minuten wird spürbar, was Demokratie im Kern bedeutet: nicht Einigkeit um jeden Preis, sondern der Prozess, der dorthin führt. Entwickelt von KidsLab gGmbH, Augsburg.
+
+---
+
+## Technik
+
+### Architektur
+
+- **Backend:** Python (Flask + Flask-SocketIO) — Game-Server, Admin-UI und API in einem Prozess
+- **Frontend:** Vanilla HTML/CSS/JS mit WebSocket (Socket.IO) für Echtzeit-Spielstatus
+- **Zielplattform:** Raspberry Pi (Bookworm, Wayfire/Wayland) im Kiosk-Modus
+- **Paketmanager:** [uv](https://docs.astral.sh/uv/)
+
+### Steuerung
+
+Tastenbelegung (konfigurierbar in `game_config.json`):
+
+| Spieler | Ja | Nein |
+|---------|-----|------|
+| Spieler 1 | `1` | `2` |
+| Spieler 2 | `8` | `9` |
+
+Später ersetzbar durch GPIO, USB-Arcade-Encoder oder ESP32 — die Spiellogik ist von der Eingabequelle entkoppelt.
+
+### Spielablauf
+
+```
+START → Frage anzeigen → 10s Abstimmung
+  EINIG     → +1 Punkt → nächste Frage
+  UNEINIG   → Buzzer → 120s Debatte (jederzeit neu abstimmen)
+    → Einigung vor Ablauf → +1 Punkt → nächste Frage
+    → Keine Einigung      → Game Over
+ENDE → Punktestand → Neustart möglich
+```
+
+---
+
+## Entwicklung
+
+### Voraussetzungen
+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (Paketmanager)
+
+### Starten
+
+```bash
+uv sync                    # Dependencies installieren
+uv run python app.py       # Server starten auf Port 5001
+```
+
+Dann im Browser öffnen:
+- **Spiel:** http://localhost:5001
+- **Admin:** http://localhost:5001/admin
+
+### Konfiguration
+
+Alle Einstellungen in `game_config.json`:
+
+```json
+{
+  "keys": { ... },
+  "timers": {
+    "voting_seconds": 10,
+    "debate_seconds": 120,
+    "transition_seconds": 10,
+    "questions_per_game": 5
+  },
+  "server": {
+    "port": 5001,
+    "debug": true
+  }
+}
+```
+
+---
+
+## Raspberry Pi Installation
+
+### Voraussetzungen
+
+- Raspberry Pi (empfohlen: Pi 4 oder Pi 5)
+- Raspberry Pi OS **Bookworm** (nutzt Wayfire/Wayland)
+- Bildschirm/Monitor angeschlossen
+- Repository geklont nach `~/src/EinigOderAus`
+
+### Einmal-Setup
+
+```bash
+cd ~/src/EinigOderAus
+bash scripts/install.sh
+sudo reboot
+```
+
+Das Install-Script macht folgendes:
+1. Installiert System-Pakete (`wtype`, `curl`)
+2. Installiert `uv` falls nicht vorhanden
+3. Installiert Python-Dependencies (`uv sync`)
+4. Setzt `debug: false` in `game_config.json`
+5. Richtet den **systemd-Service** ein (Flask-Server startet automatisch)
+6. Richtet den **Hotspot-Fallback** ein (eigenes WLAN bei fehlender Verbindung)
+7. Konfiguriert **Wayfire-Autostart** für Chromium im Kiosk-Modus
+8. Deaktiviert Bildschirmschoner/DPMS
+
+### Boot-Ablauf
+
+```
+[Boot]
+  ├── systemd → Flask-Server (Port 5001)
+  ├── systemd → Hotspot-Check (nach NetworkManager)
+  │     └── Kein WLAN? → Hotspot "EinigOderAus" aufmachen
+  └── Wayfire → kiosk.sh → wartet auf Server → Chromium --kiosk
+```
+
+### Fallback-Hotspot
+
+Wenn der Pi beim Boot kein bekanntes WLAN findet, öffnet er automatisch einen eigenen Hotspot:
+
+| | |
+|---|---|
+| **SSID** | `EinigOderAus` |
+| **Passwort** | `kidslab` |
+| **IP des Pi** | `192.168.4.1` |
+
+Verbinden und dann Admin-UI aufrufen: **http://192.168.4.1:5001/admin**
+
+Sobald ein bekanntes WLAN konfiguriert ist und beim nächsten Boot gefunden wird, verbindet sich der Pi normal und der Hotspot bleibt aus.
+
+### Services verwalten
+
+```bash
+# Flask-Server Status
+sudo systemctl status einig-oder-aus@$(whoami)
+
+# Server neu starten
+sudo systemctl restart einig-oder-aus@$(whoami)
+
+# Logs anzeigen
+journalctl -u einig-oder-aus@$(whoami) -f
+
+# Hotspot-Status
+sudo systemctl status einig-hotspot@$(whoami)
+```
+
+### Kiosk-Modus debuggen
+
+```bash
+# Wayfire-Autostart prüfen
+grep -A3 '\[autostart\]' ~/.config/wayfire.ini
+
+# Chromium manuell im Kiosk starten
+bash ~/src/EinigOderAus/scripts/kiosk.sh
+
+# Wayfire/Chromium-Logs
+journalctl --user -b | grep -iE 'wayfire|kiosk|chromium'
+```
+
+### Aktualisieren
+
+```bash
+cd ~/src/EinigOderAus
+git pull
+uv sync
+sudo systemctl restart einig-oder-aus@$(whoami)
+```
+
+---
+
+## Projektstruktur
+
+```
+EinigOderAus/
+├── app.py                  # Flask-Server Einstiegspunkt
+├── config.py               # Konfigurations-Accessors
+├── game_config.json        # Laufzeit-Konfiguration
+├── game/                   # Spiellogik (State Machine)
+├── web/                    # Routes, Socket-Events, Templates
+├── static/                 # CSS, JS, Bilder, Sounds
+├── questions/              # Fragen als Markdown (nach Kategorie)
+└── scripts/
+    ├── install.sh              # Einmal-Setup auf dem Pi
+    ├── einig-oder-aus.service  # systemd-Unit (Flask-Server)
+    ├── einig-hotspot.service   # systemd-Unit (Hotspot-Fallback)
+    ├── hotspot.sh              # Hotspot-Logik
+    └── kiosk.sh                # Chromium Kiosk-Launcher
+```
+
+---
+
+## Lizenz & Credits
+
+Eine interaktive Installation von [KidsLab gGmbH](https://kidslab.de), Augsburg.
+Inspiriert von Adam J. Scarboroughs „The Democracy Machine!".
 
 
