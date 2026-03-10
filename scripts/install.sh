@@ -48,20 +48,20 @@ fi
 
 # --- systemd-Service ---
 echo "→ systemd-Service installieren ..."
-SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}@.service"
-sudo cp "$REPO_DIR/scripts/einig-oder-aus.service" "$SERVICE_FILE"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+sed -e "s|__REPO_DIR__|$REPO_DIR|g" -e "s|__USER__|$CURRENT_USER|g" "$REPO_DIR/scripts/einig-oder-aus.service" | sudo tee "$SERVICE_FILE" >/dev/null
 sudo systemctl daemon-reload
-sudo systemctl enable "${SERVICE_NAME}@${CURRENT_USER}.service"
-sudo systemctl start "${SERVICE_NAME}@${CURRENT_USER}.service" || true
-echo "  Service: ${SERVICE_NAME}@${CURRENT_USER}"
+sudo systemctl enable "${SERVICE_NAME}.service"
+sudo systemctl start "${SERVICE_NAME}.service" || true
+echo "  Service: ${SERVICE_NAME}"
 
 # --- Hotspot-Service ---
 echo "→ Fallback-Hotspot-Service installieren ..."
-HOTSPOT_SERVICE="/etc/systemd/system/einig-hotspot@.service"
-sudo cp "$REPO_DIR/scripts/einig-hotspot.service" "$HOTSPOT_SERVICE"
+HOTSPOT_SERVICE="/etc/systemd/system/einig-hotspot.service"
+sed -e "s|__REPO_DIR__|$REPO_DIR|g" -e "s|__USER__|$CURRENT_USER|g" "$REPO_DIR/scripts/einig-hotspot.service" | sudo tee "$HOTSPOT_SERVICE" >/dev/null
 chmod +x "$REPO_DIR/scripts/hotspot.sh"
 sudo systemctl daemon-reload
-sudo systemctl enable "einig-hotspot@${CURRENT_USER}.service"
+sudo systemctl enable "einig-hotspot.service"
 echo "  Hotspot-Service aktiviert (startet bei fehlendem WLAN)"
 
 # --- kiosk.sh ausführbar machen ---

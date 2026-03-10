@@ -6,8 +6,8 @@ Wants=NetworkManager-wait-online.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-User=%I
-ExecStart=/home/%I/src/EinigOderAus/scripts/hotspot.sh
+User=__USER__
+ExecStart=__REPO_DIR__/scripts/hotspot.sh
 
 [Install]
 WantedBy=multi-user.target

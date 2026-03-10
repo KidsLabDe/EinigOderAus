@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=%I
-WorkingDirectory=/home/%I/src/EinigOderAus
+User=__USER__
+WorkingDirectory=__REPO_DIR__
 ExecStart=/usr/bin/env uv run python app.py
 Restart=always
 RestartSec=3

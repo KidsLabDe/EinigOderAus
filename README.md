@@ -150,16 +150,16 @@ Sobald ein bekanntes WLAN konfiguriert ist und beim nächsten Boot gefunden wird
 
 ```bash
 # Flask-Server Status
-sudo systemctl status einig-oder-aus@$(whoami)
+sudo systemctl status einig-oder-aus
 
 # Server neu starten
-sudo systemctl restart einig-oder-aus@$(whoami)
+sudo systemctl restart einig-oder-aus
 
 # Logs anzeigen
-journalctl -u einig-oder-aus@$(whoami) -f
+journalctl -u einig-oder-aus -f
 
 # Hotspot-Status
-sudo systemctl status einig-hotspot@$(whoami)
+sudo systemctl status einig-hotspot
 ```
 
 ### Kiosk-Modus debuggen
@@ -181,7 +181,7 @@ journalctl --user -b | grep -iE 'wayfire|kiosk|chromium'
 cd ~/src/EinigOderAus
 git pull
 uv sync
-sudo systemctl restart einig-oder-aus@$(whoami)
+sudo systemctl restart einig-oder-aus
 ```
 
 ---
