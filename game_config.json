@@ -9,7 +9,8 @@
     "voting_seconds": 10,
     "debate_seconds": 120,
     "transition_seconds": 10,
-    "questions_per_game": 5
+    "questions_per_game": 5,
+    "end_screen_seconds": 30
   },
   "server": {
     "port": 5001,

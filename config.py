@@ -45,6 +45,10 @@ def questions_per_game() -> int:
     return _load()["timers"].get("questions_per_game", 5)
 
 
+def end_screen_time() -> int:
+    return _load()["timers"].get("end_screen_seconds", 30)
+
+
 def port() -> int:
     return _load()["server"]["port"]
 

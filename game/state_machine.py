@@ -204,6 +204,7 @@ class GameStateMachine:
             self.session.score, len(self.session.questions),
             self._category, completed=False,
         )
+        self._start_end_screen_timer()
 
     def _enter_score_screen(self):
         """All questions done — show final score."""
@@ -215,6 +216,20 @@ class GameStateMachine:
             self.session.score, len(self.session.questions),
             self._category, completed=True,
         )
+        self._start_end_screen_timer()
+
+    def _start_end_screen_timer(self):
+        """Auto-return to idle after end_screen_seconds."""
+        seconds = config.end_screen_time()
+        if seconds > 0:
+            self._timer = threading.Timer(seconds, self._on_end_screen_timeout)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _on_end_screen_timeout(self):
+        """End screen timer expired — return to idle."""
+        if self.session.phase in (GamePhase.GAME_OVER, GamePhase.SCORE_SCREEN):
+            self.restart_game()
 
     def _current_timer_total(self) -> int:
         if self.session.phase == GamePhase.TRANSITION:
