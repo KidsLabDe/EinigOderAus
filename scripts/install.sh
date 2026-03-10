@@ -46,6 +46,16 @@ print('  debug =', cfg['server']['debug'])
 "
 fi
 
+# --- Alte Template-Services aufräumen (vor v9828dbf) ---
+for OLD_SVC in "einig-oder-aus@${CURRENT_USER}.service" "einig-hotspot@${CURRENT_USER}.service"; do
+    if systemctl list-unit-files "$OLD_SVC" &>/dev/null && [ -f "/etc/systemd/system/${OLD_SVC%%@*}@.service" ]; then
+        echo "→ Alten Service $OLD_SVC entfernen ..."
+        sudo systemctl stop "$OLD_SVC" 2>/dev/null || true
+        sudo systemctl disable "$OLD_SVC" 2>/dev/null || true
+        sudo rm -f "/etc/systemd/system/${OLD_SVC%%@*}@.service"
+    fi
+done
+
 # --- systemd-Service ---
 echo "→ systemd-Service installieren ..."
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
