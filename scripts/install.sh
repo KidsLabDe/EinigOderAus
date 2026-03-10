@@ -58,8 +58,10 @@ done
 
 # --- systemd-Service ---
 echo "→ systemd-Service installieren ..."
+UV_PATH="$(command -v uv)"
+USER_HOME="$(eval echo "~$CURRENT_USER")"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-sed -e "s|__REPO_DIR__|$REPO_DIR|g" -e "s|__USER__|$CURRENT_USER|g" "$REPO_DIR/scripts/einig-oder-aus.service" | sudo tee "$SERVICE_FILE" >/dev/null
+sed -e "s|__REPO_DIR__|$REPO_DIR|g" -e "s|__USER__|$CURRENT_USER|g" -e "s|__UV_PATH__|$UV_PATH|g" -e "s|__HOME__|$USER_HOME|g" "$REPO_DIR/scripts/einig-oder-aus.service" | sudo tee "$SERVICE_FILE" >/dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable "${SERVICE_NAME}.service"
 sudo systemctl start "${SERVICE_NAME}.service" || true

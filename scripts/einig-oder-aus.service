@@ -6,10 +6,11 @@ After=network.target
 Type=simple
 User=__USER__
 WorkingDirectory=__REPO_DIR__
-ExecStart=/usr/bin/env uv run python app.py
+ExecStart=__UV_PATH__ run python app.py
 Restart=always
 RestartSec=3
 Environment=PYTHONUNBUFFERED=1
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:__HOME__/.local/bin:__HOME__/.cargo/bin
 
 [Install]
 WantedBy=multi-user.target
