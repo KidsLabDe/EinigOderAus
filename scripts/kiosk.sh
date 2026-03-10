@@ -27,4 +27,5 @@ exec chromium \
     --check-for-update-interval=31536000 \
     --enable-features=UseOzonePlatform \
     --ozone-platform=wayland \
+    --password-store=basic \
     "$URL"
