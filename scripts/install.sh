@@ -79,41 +79,33 @@ echo "  Hotspot-Service aktiviert (startet bei fehlendem WLAN)"
 # --- kiosk.sh ausführbar machen ---
 chmod +x "$REPO_DIR/scripts/kiosk.sh"
 
-# --- Wayfire Autostart ---
-echo "→ Wayfire Autostart konfigurieren ..."
-WAYFIRE_INI="$HOME/.config/wayfire.ini"
+# --- Desktop Autostart (labwc) ---
+echo "→ Desktop-Autostart konfigurieren ..."
+LABWC_DIR="$HOME/.config/labwc"
+LABWC_AUTOSTART="$LABWC_DIR/autostart"
+KIOSK_CMD="bash $REPO_DIR/scripts/kiosk.sh &"
 
-if [ ! -f "$WAYFIRE_INI" ]; then
-    mkdir -p "$(dirname "$WAYFIRE_INI")"
-    touch "$WAYFIRE_INI"
-fi
+mkdir -p "$LABWC_DIR"
 
-KIOSK_LINE="einig_oder_aus = bash $REPO_DIR/scripts/kiosk.sh"
-
-if grep -q "einig_oder_aus" "$WAYFIRE_INI" 2>/dev/null; then
-    echo "  Wayfire-Eintrag existiert bereits."
+if [ -f "$LABWC_AUTOSTART" ] && grep -q "kiosk.sh" "$LABWC_AUTOSTART" 2>/dev/null; then
+    echo "  labwc-Autostart existiert bereits."
 else
-    # [autostart]-Sektion hinzufügen oder ergänzen
-    if grep -q "^\[autostart\]" "$WAYFIRE_INI"; then
-        # Eintrag unter existierende [autostart]-Sektion
-        sed -i "/^\[autostart\]/a $KIOSK_LINE" "$WAYFIRE_INI"
-    else
-        printf '\n[autostart]\n%s\n' "$KIOSK_LINE" >> "$WAYFIRE_INI"
-    fi
-    echo "  Wayfire-Autostart eingetragen."
+    echo "$KIOSK_CMD" >> "$LABWC_AUTOSTART"
+    echo "  labwc-Autostart eingetragen."
 fi
 
 # --- Bildschirmschoner deaktivieren ---
 echo "→ Bildschirmschoner deaktivieren ..."
-WAYFIRE_IDLE="[idle]
-dpms_timeout = -1
-screensaver_timeout = -1"
-
-if grep -q "^\[idle\]" "$WAYFIRE_INI"; then
-    echo "  [idle]-Sektion existiert bereits — bitte manuell prüfen."
+LABWC_ENV="$LABWC_DIR/environment"
+if [ -f "$LABWC_ENV" ] && grep -q "DPMS" "$LABWC_ENV" 2>/dev/null; then
+    echo "  Bereits konfiguriert."
 else
-    printf '\n%s\n' "$WAYFIRE_IDLE" >> "$WAYFIRE_INI"
-    echo "  DPMS/Screensaver deaktiviert."
+    # Disable screen blanking via wlr-randr after compositor starts
+    BLANK_CMD="wlr-randr 2>/dev/null; xset s off -dpms 2>/dev/null &"
+    if ! grep -q "xset" "$LABWC_AUTOSTART" 2>/dev/null; then
+        echo "$BLANK_CMD" >> "$LABWC_AUTOSTART"
+    fi
+    echo "  Bildschirmschoner deaktiviert."
 fi
 
 echo ""

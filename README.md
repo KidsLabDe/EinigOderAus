@@ -100,14 +100,14 @@ Alle Einstellungen in `game_config.json`:
 ### Voraussetzungen
 
 - Raspberry Pi (empfohlen: Pi 4 oder Pi 5)
-- Raspberry Pi OS **Bookworm** (nutzt Wayfire/Wayland)
+- Raspberry Pi OS **Bookworm** (nutzt labwc/Wayland)
 - Bildschirm/Monitor angeschlossen
-- Repository geklont nach `~/src/EinigOderAus`
+- Repository geklont nach `~/EinigOderAus`
 
 ### Einmal-Setup
 
 ```bash
-cd ~/src/EinigOderAus
+cd ~/EinigOderAus
 bash scripts/install.sh
 sudo reboot
 ```
@@ -119,7 +119,7 @@ Das Install-Script macht folgendes:
 4. Setzt `debug: false` in `game_config.json`
 5. Richtet den **systemd-Service** ein (Flask-Server startet automatisch)
 6. Richtet den **Hotspot-Fallback** ein (eigenes WLAN bei fehlender Verbindung)
-7. Konfiguriert **Wayfire-Autostart** für Chromium im Kiosk-Modus
+7. Konfiguriert **labwc-Autostart** für Chromium im Kiosk-Modus
 8. Deaktiviert Bildschirmschoner/DPMS
 
 ### Boot-Ablauf
@@ -129,7 +129,7 @@ Das Install-Script macht folgendes:
   ├── systemd → Flask-Server (Port 5001)
   ├── systemd → Hotspot-Check (nach NetworkManager)
   │     └── Kein WLAN? → Hotspot "EinigOderAus" aufmachen
-  └── Wayfire → kiosk.sh → wartet auf Server → Chromium --kiosk
+  └── labwc autostart → kiosk.sh → wartet auf Server → Chromium --kiosk
 ```
 
 ### Fallback-Hotspot
@@ -165,20 +165,17 @@ sudo systemctl status einig-hotspot
 ### Kiosk-Modus debuggen
 
 ```bash
-# Wayfire-Autostart prüfen
-grep -A3 '\[autostart\]' ~/.config/wayfire.ini
+# labwc-Autostart prüfen
+cat ~/.config/labwc/autostart
 
 # Chromium manuell im Kiosk starten
-bash ~/src/EinigOderAus/scripts/kiosk.sh
-
-# Wayfire/Chromium-Logs
-journalctl --user -b | grep -iE 'wayfire|kiosk|chromium'
+bash ~/EinigOderAus/scripts/kiosk.sh
 ```
 
 ### Aktualisieren
 
 ```bash
-cd ~/src/EinigOderAus
+cd ~/EinigOderAus
 git pull
 uv sync
 sudo systemctl restart einig-oder-aus
